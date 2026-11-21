@@ -965,7 +965,11 @@ input[type='color']::-moz-color-swatch {
 }
 .export-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
+}
+.export-actions .btn {
+  white-space: nowrap;
 }
 .code {
   max-height: calc(100vh - 290px);

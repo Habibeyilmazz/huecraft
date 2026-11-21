@@ -5,7 +5,7 @@ import { exportTokens, FORMATS, isFormat, type Format } from '../core/export.ts'
 import { SCALE_NAMES, STATUSES, type ScaleName } from '../core/scales.ts';
 import type { Theme } from '../core/semantic.ts';
 import {
-  buildTokens, CLASH_DEGREES, DEFAULT_RECIPE, hueClashes, LIMITS, RATIOS, recipeFromParams, recipeToParams, type Recipe, type TokenSet,
+  buildTokens, CLASH_DEGREES, DEFAULT_RECIPE, hueClashes, LIMITS, RATIOS, recipeFromParams, recipeToCommand, recipeToParams, type Recipe, type TokenSet,
 } from '../core/tokens.ts';
 import { PREVIEW_HTML } from './preview.ts';
 import { renderCode, renderContrast, renderPalette, renderScale } from './views.ts';
@@ -355,6 +355,12 @@ $('download-code').addEventListener('click', () => {
   // Some browsers start the save after the click returns; revoking at once cancels it.
   setTimeout(() => URL.revokeObjectURL(link.href), 10_000);
   toast(`Saved ${link.download}`);
+});
+
+// The CLI call that writes this export to a file, for a build script or a README.
+$('copy-command').addEventListener('click', () => {
+  const args = recipeToCommand(state.recipe).replace(/^huecraft /, '');
+  void copy(`npx github:Habibeyilmazz/huecraft ${args} --format ${state.format} > ${FORMATS[state.format].file}`, 'Command copied');
 });
 
 // Back/forward and hand-edited URLs.

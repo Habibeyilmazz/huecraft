@@ -2,7 +2,7 @@
 //   node scripts/e2e.mjs            run the checks against `vite preview`
 //   node scripts/e2e.mjs --shots    also refresh docs/screenshots/
 import assert from 'node:assert/strict';
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { createRequire } from 'node:module';
 import { mkdirSync } from 'node:fs';
 import { chromium } from 'playwright';
@@ -278,6 +278,21 @@ try {
     assert.equal(await page.evaluate(() => navigator.clipboard.readText()), (await page.locator('#code').textContent()));
     const [download] = await Promise.all([page.waitForEvent('download'), page.click('#download-code')]);
     assert.equal(download.suggestedFilename(), 'tokens.css');
+    await close();
+  });
+
+  await check('copy command and the page link both make the CLI print the export shown', async () => {
+    const { page, close } = await open('?tab=export&b=c81e5b&t=0.6&lv=AAA&hd=350');
+    await page.locator('input[name="format"][value="scss"]').check({ force: true });
+    await settle(page);
+    const shown = await page.locator('#code').textContent();
+    const cli = (...args) => spawnSync(process.execPath, ['src/cli.ts', ...args], { encoding: 'utf8' });
+    await page.click('#copy-command');
+    const command = await page.evaluate(() => navigator.clipboard.readText());
+    const match = command.match(/^npx github:Habibeyilmazz\/huecraft (.+) > _tokens\.scss$/);
+    assert.ok(match, command);
+    assert.equal(cli(...match[1].split(' ')).stdout, shown);
+    assert.equal(cli(page.url(), '--format', 'scss').stdout, shown);
     await close();
   });
 
