@@ -5,6 +5,24 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Design pass (round 10)
+
+Looked at every tab at 1440px and 390px in both themes, the bad-color state and keyboard focus, and ran Lighthouse
+12.6.1 (Playwright's Chromium, production build on `localhost`) for the first time.
+
+- **Fixed: the preview's pick-up radios were 15px targets 24px apart**, which fails WCAG 2.2 target size (2.5.8).
+  Choice rows are now 1.75rem tall. axe's `target-size` rule is off by default, so `npm run e2e` now turns it on;
+  with the fix reverted that check fails.
+- **Changed: the type specimen sets body sizes (base, sm, xs) at body weight** instead of heading weight.
+- **Fixed: the full-page README screenshots cut the sidebar off at "Shape"** (a 100vh sticky sidebar in a full-page
+  capture). `e2e --shots` now grows the window to the page height first; preview screenshots refreshed.
+- Lighthouse, default mobile profile (simulated slow 4G, 4x CPU), `/`: performance 98, accessibility 100, best
+  practices 100, SEO 91; FCP and LCP 1.8 s, TBT 0, CLS 0. Desktop profile, `?tab=preview&th=dark`, before the radio
+  fix: 100 / 97 / 100 / 91, FCP and LCP 0.4 s. The SEO point lost is `robots.txt`, which the local preview server
+  answers with the page; on Pages the site lives under `/huecraft/`, so no robots.txt is added.
+- Still open, not code bugs: Pages workflow never run and no homepage (owner enables Pages); Figma payload never
+  imported; only Chromium; no social image (needs a public URL first).
+
 ### First-run review
 
 Cloned the repo fresh and followed the README literally: `npm ci`, `npm run dev` on 4140, both CLI lines (the

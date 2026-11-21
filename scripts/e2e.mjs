@@ -376,8 +376,10 @@ try {
     for (const [name, query, fullPage, viewport = { width: 1440, height: 900 }, anchor] of shots) {
       const { page, close } = await open(query, viewport, { deviceScaleFactor: 2 });
       if (anchor) await page.locator(anchor).evaluate((e) => scrollTo(0, e.getBoundingClientRect().top + scrollY));
+      // A full-page capture keeps the 100vh sticky sidebar cut short, so grow the window to the page instead.
+      if (fullPage) await page.setViewportSize({ width: viewport.width, height: await page.evaluate(() => document.documentElement.scrollHeight) });
       await page.waitForTimeout(200);
-      await page.screenshot({ path: `docs/screenshots/${name}.png`, fullPage });
+      await page.screenshot({ path: `docs/screenshots/${name}.png` });
       await close();
     }
     console.log('ok   screenshots written to docs/screenshots/');
