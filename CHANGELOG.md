@@ -5,6 +5,24 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Feature round: studio link to CLI, and back
+
+- **Added: the CLI takes a studio link.** `huecraft '<link from Copy link>' --format scss` (or just the `?query`
+  part) reads the recipe from the link; any option given as well overrides it. Theme, tab and vision parameters
+  are ignored. A link without `b=` and an invalid link exit with code 2. `recipeInputFromParams` in
+  `core/tokens.ts` is now shared by the studio and the CLI.
+- **Added: "Copy command" in the Export tab.** It copies `npx github:Habibeyilmazz/huecraft <recipe> --format <f> >
+  <file>` for the format on screen. The export buttons now wrap as whole buttons on a phone instead of breaking
+  their labels.
+- Why this one: designers tune a palette in the studio and send a link; until now a developer had to translate it
+  into flags by hand (or find the recreate comment in an export) to get the tokens into a build.
+- Tests: a CLI unit test (full link, query only, uppercase scheme with a fragment, options overriding, missing
+  `b=`, out-of-range field, malformed URL) and an end-to-end check that runs both the copied command and the page's
+  own URL through the CLI and compares the output with the export shown.
+- Reported gaps re-checked and still open, none of them a code bug: the Pages workflow has never run and no
+  homepage is set (enabling Pages is the owner's call); the Figma payload has never been imported; only Chromium
+  is exercised; no social image. There is no `--fix` flag, so a link with `fx=0` stays unfixed in the CLI.
+
 ### Launch pass
 
 - Added: "How it compares" in the README (Radix Colors, Tailwind, Leonardo, Material Theme Builder, Style Dictionary,

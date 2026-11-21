@@ -28,6 +28,16 @@ npx github:Habibeyilmazz/huecraft 7c3aed --format tailwind  # anywhere; builds f
 
 Write the color without `#`, or quote it (`'#7c3aed'`), because an unquoted `#` starts a comment in most shells.
 `'rgb(124 58 237)'` and `'oklch(0.54 0.25 293)'` work too, quoted.
+
+Got a link from someone who tuned the palette in the studio? Pass it to the CLI in quotes instead of a color; its
+recipe is used, and any option you add overrides it:
+
+```bash
+node dist-cli/cli.js 'http://localhost:4140/?b=7c3aed&t=0.5&lv=AAA&th=dark' --format scss > _tokens.scss
+```
+
+"Copy command" in the studio's Export tab goes the other way: it copies the `npx` call that writes the export on
+screen to a file, ready for a build script.
 Run `node dist-cli/cli.js --help` for every option. huecraft is not published to npm.
 
 ## What you get
@@ -54,7 +64,8 @@ Run `node dist-cli/cli.js --help` for every option. huecraft is not published to
 - **Color-vision simulation.** View the whole studio as someone with protanopia, deuteranopia, tritanopia or
   achromatopsia would.
 - **Exports.** CSS custom properties, a Tailwind CSS v4 `@theme`, W3C design-tokens JSON, a Figma variables payload
-  and SCSS maps. Copy or download. Shadows are in every format except the Figma payload.
+  and SCSS maps. Copy or download, or copy the CLI command that writes the same file. Shadows are in every format
+  except the Figma payload.
 - **Shareable links.** The whole state lives in the URL query string. "Copy link" gives you a link that reopens the
   same palette, theme and tab.
 
@@ -80,8 +91,11 @@ swatches and the selected states. An axe audit of every tab in both themes runs 
 
 ```text
 huecraft <color> [options]
+huecraft <studio link> [options]
 
   <color>            7c3aed, '#7c3aed', 'rgb(124 58 237)' or 'oklch(0.54 0.25 293)'
+  <studio link>      a link from the studio's "Copy link", or just its ?query part, in quotes;
+                     its recipe is used and any option below overrides it
   -f, --format <f>   css | tailwind | json | figma | scss   (default: css)
       --tint <n>     neutral tint toward the brand hue, 0..1   (default: 0.3)
       --ratio <n>    type scale ratio: 1.067, 1.125, 1.2, 1.25, 1.333, 1.414, 1.5   (default: 1.25)
@@ -97,8 +111,10 @@ huecraft <color> [options]
 
 The CSS, Tailwind and SCSS output starts with a comment holding the command that recreates it; the design-tokens
 JSON has it in `$description`. The Figma payload carries no such note, because it is a request body.
-Invalid input exits with code 2 and a message on stderr. A status hue within 30° of the brand or of another status
-prints a note on stderr and still exits 0, so the output can be redirected as usual.
+A link is read for its recipe only (theme, tab and vision settings are ignored) and must contain a brand color
+(`b=`); fields it leaves out take their defaults, as in the studio. Invalid input exits with code 2 and a message
+on stderr. A status hue within 30° of the brand or of another status prints a note on stderr and still exits 0, so
+the output can be redirected as usual.
 
 ## How it works
 
