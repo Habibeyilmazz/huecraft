@@ -380,8 +380,7 @@ input[type='color']::-moz-color-swatch {
   grid-template-columns: 1fr auto;
   gap: 4px 8px;
 }
-.slider + .slider,
-.slider + .select-row {
+.slider + .slider {
   margin-top: 14px;
 }
 .slider output {
@@ -414,18 +413,21 @@ input[type='color']::-moz-color-swatch {
 .hue-note strong {
   font-weight: 650;
 }
-.select-row {
-  display: flex;
+.type-fields {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  gap: 10px 12px;
+  margin-top: 14px;
 }
-.select-row label {
+.type-fields label {
   white-space: nowrap;
 }
-.select-row select {
-  flex: 1;
-  min-width: 0; /* the longest option would otherwise push the label onto two lines */
+.font-note {
+  margin-top: 10px;
+  color: var(--c-muted);
+  font-size: 0.8125rem;
+  line-height: 1.4;
 }
 .check {
   display: flex;

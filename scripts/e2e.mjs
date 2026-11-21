@@ -171,6 +171,31 @@ try {
     await close();
   });
 
+  await check('brand fonts reach the preview, the link and the export; an unsafe name is refused', async () => {
+    const { page, errors, close } = await open('?tab=preview');
+    await page.fill('#font', 'Source Sans 3');
+    await page.fill('#heading', 'Fraunces');
+    await settle(page);
+    const family = (sel) => page.evaluate((s) => getComputedStyle(document.querySelector(s)).fontFamily, sel);
+    assert.match(await family('.pv'), /^"Source Sans 3", system-ui/);
+    assert.match(await family('.pv h3'), /^Fraunces, "Source Sans 3", system-ui/);
+    assert.equal(await page.evaluate(() => getComputedStyle(document.querySelector('.pv')).lineHeight), '24px', '16px body at 1.5');
+    assert.match(page.url(), /[?&]f=Source\+Sans\+3&fh=Fraunces(&|$)/);
+    await page.fill('#font', "Inter'; } body { display: none");
+    await page.press('#font', 'Tab');
+    assert.equal(await page.getAttribute('#font', 'aria-invalid'), 'true');
+    assert.ok(await page.locator('#font-error').isVisible());
+    assert.match(await family('.pv'), /^"Source Sans 3"/, 'the last valid name stays');
+    await page.click('#tab-export');
+    assert.match(await page.locator('#code').innerText(), /--font 'Source Sans 3' --heading-font 'Fraunces' \*\//);
+    await page.fill('#font', '');
+    await settle(page);
+    assert.ok(await page.locator('#font-error').isHidden());
+    assert.doesNotMatch(page.url(), /[?&]f=/);
+    assert.deepEqual(errors, []);
+    await close();
+  });
+
   await check('theme switch restyles the preview instantly', async () => {
     const { page, close } = await open('?tab=preview&th=light');
     const bg = () => page.evaluate(() => getComputedStyle(document.querySelector('.pv')).backgroundColor);

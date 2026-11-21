@@ -143,8 +143,8 @@ export function renderContrast(tokens: TokenSet, theme: Theme, matrix: { fg: Sca
 export function renderScale(tokens: TokenSet): void {
   const type = [...tokens.type].reverse().map((s) => `<li>
       <code>--text-${s.name}</code>
-      <span class="spec-sample${s.minPx === s.maxPx ? ' is-body' : ''}" style="font-size:var(--text-${s.name})">Ride north first</span>
-      <span class="spec-meta">${s.minPx === s.maxPx ? px(s.maxPx) : `${px(s.minPx)} to ${px(s.maxPx)}`}</span>
+      <span class="spec-sample${s.minPx === s.maxPx ? ' is-body' : ''}" style="font-size:var(--text-${s.name});line-height:var(--text-${s.name}--line-height)${s.minPx === s.maxPx ? '' : ';font-family:var(--font-heading)'}">Ride north first</span>
+      <span class="spec-meta">${s.minPx === s.maxPx ? px(s.maxPx) : `${px(s.minPx)} to ${px(s.maxPx)}`} / ${s.lineHeight}</span>
     </li>`).join('');
   const space = tokens.space.map((s) => `<li>
       <code>--space-${s.name}</code><span class="spec-meta">${px(s.px)}</span><i style="width:${s.px}px"></i>
@@ -160,7 +160,7 @@ export function renderScale(tokens: TokenSet): void {
     <p class="panel-note">Sizes above the body size are fluid: they grow from the smaller value on a ${VIEWPORT_MIN}px wide
     screen to the larger one at ${VIEWPORT_MAX}px, using clamp(). Everything is in rem, so browser zoom still works.</p>
     <div class="pv spec">
-      <section class="pv-card spec-type" aria-labelledby="spec-type"><h3 id="spec-type">Type scale, ratio ${esc(String(tokens.recipe.ratio))}</h3><ol>${type}</ol></section>
+      <section class="pv-card spec-type" aria-labelledby="spec-type"><h3 id="spec-type">Type scale, ratio ${esc(String(tokens.recipe.ratio))}</h3><p class="pv-muted spec-fonts">Headings: ${esc(tokens.recipe.heading || tokens.recipe.font || 'system fonts')}. Body: ${esc(tokens.recipe.font || 'system fonts')}. Size / line height.</p><ol>${type}</ol></section>
       <section class="pv-card spec-space" aria-labelledby="spec-space"><h3 id="spec-space">Spacing</h3><ol>${space}</ol></section>
       <div style="display:grid;gap:var(--space-5);align-content:start">
         <section class="pv-card spec-radius" aria-labelledby="spec-radius"><h3 id="spec-radius">Radius <code>--radius-*</code></h3><ol class="spec-tiles">${radius}</ol></section>

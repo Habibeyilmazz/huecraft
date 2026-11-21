@@ -5,7 +5,7 @@ import { exportTokens, FORMATS, isFormat, type Format } from '../core/export.ts'
 import { SCALE_NAMES, STATUSES, type ScaleName } from '../core/scales.ts';
 import type { Theme } from '../core/semantic.ts';
 import {
-  buildTokens, CLASH_DEGREES, DEFAULT_RECIPE, hueClashes, LIMITS, RATIOS, recipeFromParams, recipeToCommand, recipeToParams, type Recipe, type TokenSet,
+  buildTokens, CLASH_DEGREES, DEFAULT_RECIPE, hueClashes, LIMITS, parseFontName, RATIOS, recipeFromParams, recipeToCommand, recipeToParams, type Recipe, type TokenSet,
 } from '../core/tokens.ts';
 import { PREVIEW_HTML } from './preview.ts';
 import { renderCode, renderContrast, renderPalette, renderScale } from './views.ts';
@@ -161,6 +161,14 @@ function syncControls(): void {
   const clashes = hueClashes(recipe).map(({ a, b, degrees }) =>
     `<strong>${b[0]!.toUpperCase() + b.slice(1)} is ${degrees}° from ${a === 'brand' ? 'your brand' : a}</strong> and may be mistaken for it.`);
   $('hue-note').innerHTML = clashes.length ? `${clashes.join(' ')} Keep hues at least ${CLASH_DEGREES}° apart.` : '';
+  for (const key of ['font', 'heading'] as const) {
+    const input = $<HTMLInputElement>(key);
+    if (document.activeElement !== input) {
+      input.value = recipe[key];
+      input.removeAttribute('aria-invalid');
+    }
+  }
+  $('font-error').hidden = !document.querySelector('.type-fields [aria-invalid]');
   $<HTMLInputElement>('fix').checked = recipe.fix;
   for (const r of radios('level')) r.checked = r.value === recipe.level;
   for (const r of radios('theme')) r.checked = r.value === state.theme;
@@ -264,6 +272,20 @@ $('random').addEventListener('click', () => {
   const rand = (min: number, max: number) => min + Math.random() * (max - min);
   change({ brand: oklchToHex({ l: rand(0.45, 0.72), c: rand(0.1, 0.24), h: rand(0, 360) }) });
 });
+for (const key of ['font', 'heading'] as const) {
+  const input = $<HTMLInputElement>(key);
+  // Valid names apply as you type; a bad one is reported once the field is committed.
+  input.addEventListener('input', () => {
+    const name = parseFontName(input.value);
+    if (name === null) return;
+    input.removeAttribute('aria-invalid');
+    change({ [key]: name });
+  });
+  input.addEventListener('change', () => {
+    if (parseFontName(input.value) === null) input.setAttribute('aria-invalid', 'true');
+    $('font-error').hidden = !document.querySelector('.type-fields [aria-invalid]');
+  });
+}
 $('ratio').addEventListener('change', (e) => change({ ratio: Number((e.target as HTMLSelectElement).value) }));
 $('fix').addEventListener('change', (e) => change({ fix: (e.target as HTMLInputElement).checked }));
 for (const r of radios('level')) r.addEventListener('change', () => change({ level: r.value as Recipe['level'] }));

@@ -11,23 +11,25 @@
   color: var(--color-text);
   font-family: var(--font-sans);
   font-size: var(--text-base);
-  line-height: 1.55;
+  line-height: var(--text-base--line-height);
 }
 .pv :focus-visible {
   outline: 2px solid var(--color-ring);
   outline-offset: 2px;
 }
 .pv h3 {
+  font-family: var(--font-heading);
   font-size: var(--text-xl);
   font-weight: 650;
-  line-height: 1.2;
+  line-height: var(--text-xl--line-height);
   letter-spacing: -0.01em;
 }
 .pv h4 {
   margin: var(--space-5) 0 var(--space-2);
+  font-family: var(--font-heading);
   font-size: var(--text-lg);
   font-weight: 650;
-  line-height: 1.25;
+  line-height: var(--text-lg--line-height);
 }
 .pv a {
   color: var(--color-primary-text);
@@ -175,7 +177,7 @@
   display: block;
   font-size: var(--text-3xl);
   font-weight: 650;
-  line-height: 1.15;
+  line-height: var(--text-3xl--line-height);
   letter-spacing: -0.02em;
 }
 .pv-stats dd > span {
@@ -364,14 +366,14 @@
 .pv-article h3 {
   margin: var(--space-2) 0 var(--space-3);
   font-size: var(--text-4xl);
-  line-height: 1.08;
+  line-height: var(--text-4xl--line-height);
   letter-spacing: -0.025em;
   text-wrap: balance;
 }
 .pv-lead {
   color: var(--color-text-muted);
   font-size: var(--text-lg);
-  line-height: 1.45;
+  line-height: var(--text-lg--line-height);
 }
 .pv-article p + p {
   margin-top: var(--space-4);
@@ -381,7 +383,7 @@
   padding: var(--space-1) 0 var(--space-1) var(--space-5);
   border-left: 3px solid var(--color-primary);
   font-size: var(--text-lg);
-  line-height: 1.4;
+  line-height: var(--text-lg--line-height);
 }
 .pv-article ul {
   padding-left: var(--space-5);
