@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>huecraft: a design system from one brand color</title>
+    <meta
+      name="description"
+      content="Pick one brand color and get accessible OKLCH color scales, light and dark themes, a fluid type scale, spacing, radius and shadows. Export as CSS, Tailwind v4, design-tokens JSON, Figma variables or SCSS."
+    />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" id="favicon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'/%3E" />
+    <link rel="stylesheet" href="/src/app/chrome.css" />
+    <link rel="stylesheet" href="/src/app/preview.css" />
+  </head>
+  <body>
+    <a class="skip" href="#workspace">Skip to the tokens</a>
+
+    <header class="bar" id="bar">
+      <h1 class="wordmark">
+        <span class="ramp-mark" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+        huecraft
+      </h1>
+      <p class="bar-line">One brand color in, a whole design system out.</p>
+      <div class="bar-tools">
+        <fieldset class="seg">
+          <legend class="visually-hidden">Theme</legend>
+          <label><input type="radio" name="theme" value="light" /><span>Light</span></label>
+          <label><input type="radio" name="theme" value="dark" /><span>Dark</span></label>
+        </fieldset>
+        <label class="inline-field">
+          <span>Vision</span>
+          <select id="vision">
+            <option value="normal">Typical</option>
+            <option value="protanopia">Protanopia (no red)</option>
+            <option value="deuteranopia">Deuteranopia (no green)</option>
+            <option value="tritanopia">Tritanopia (no blue)</option>
+            <option value="achromatopsia">Achromatopsia (no color)</option>
+          </select>
+        </label>
+        <button type="button" class="btn btn-solid" id="share">Copy link</button>
+      </div>
+    </header>
+
+    <div class="layout" id="layout">
+      <aside class="recipe" aria-label="Recipe">
+        <form id="recipe" autocomplete="off">
+          <fieldset class="group">
+            <legend>Brand color</legend>
+            <div class="color-row">
+              <input type="color" id="brand-picker" aria-label="Brand color picker" />
+              <div class="field">
+                <label for="brand-hex" class="visually-hidden">Brand color as hex</label>
+                <input type="text" id="brand-hex" spellcheck="false" maxlength="7" aria-describedby="brand-error brand-oklch" />
+              </div>
+              <button type="button" class="btn" id="random">Surprise me</button>
+            </div>
+            <p class="field-error" id="brand-error" hidden>Enter a hex color like #7c3aed.</p>
+            <p class="readout" id="brand-oklch"></p>
+            <div class="mini-ramp" id="mini-ramp" aria-hidden="true"></div>
+            <div class="presets" id="presets" role="group" aria-label="Starting points"></div>
+          </fieldset>
+
+          <fieldset class="group">
+            <legend>Neutrals</legend>
+            <div class="slider">
+              <label for="tint">Tint toward the brand hue</label>
+              <output for="tint" id="tint-out"></output>
+              <input type="range" id="tint" />
+            </div>
+          </fieldset>
+
+          <fieldset class="group">
+            <legend>Type</legend>
+            <div class="slider">
+              <label for="base">Body size</label>
+              <output for="base" id="base-out"></output>
+              <input type="range" id="base" />
+            </div>
+            <div class="select-row">
+              <label for="ratio">Scale ratio</label>
+              <select id="ratio"></select>
+            </div>
+          </fieldset>
+
+          <fieldset class="group">
+            <legend>Shape</legend>
+            <div class="slider">
+              <label for="unit">Spacing unit</label>
+              <output for="unit" id="unit-out"></output>
+              <input type="range" id="unit" />
+            </div>
+            <div class="slider">
+              <label for="radius">Corner roundness</label>
+              <output for="radius" id="radius-out"></output>
+              <input type="range" id="radius" />
+            </div>
+          </fieldset>
+
+          <fieldset class="group">
+            <legend>Contrast target</legend>
+            <div class="seg seg-wide">
+              <label><input type="radio" name="level" value="AA" /><span>AA, 4.5 to 1</span></label>
+              <label><input type="radio" name="level" value="AAA" /><span>AAA, 7 to 1</span></label>
+            </div>
+            <label class="check">
+              <input type="checkbox" id="fix" />
+              <span>Move tokens to the nearest step that passes</span>
+            </label>
+          </fieldset>
+
+          <button type="button" class="btn" id="reset">Reset the recipe</button>
+        </form>
+        <p class="colophon">
+          Open source under the MIT license.
+          <a href="https://github.com/Habibeyilmazz/huecraft">Source and CLI on GitHub</a>
+        </p>
+      </aside>
+
+      <main id="workspace" tabindex="-1">
+        <div class="tabs" role="tablist" aria-label="Views" id="tabs">
+          <button type="button" role="tab" id="tab-palette" aria-controls="panel-palette">Palette</button>
+          <button type="button" role="tab" id="tab-preview" aria-controls="panel-preview">Preview</button>
+          <button type="button" role="tab" id="tab-contrast" aria-controls="panel-contrast">Contrast</button>
+          <button type="button" role="tab" id="tab-scale" aria-controls="panel-scale">Type and space</button>
+          <button type="button" role="tab" id="tab-export" aria-controls="panel-export">Export</button>
+        </div>
+
+        <section role="tabpanel" id="panel-palette" aria-labelledby="tab-palette" tabindex="0" hidden>
+          <h2 class="visually-hidden">Palette</h2>
+          <p class="panel-note">Six scales of eleven steps, built in OKLCH. Select a swatch to copy its hex value.</p>
+          <div id="scales"></div>
+          <h3 class="section-title">Semantic tokens</h3>
+          <p class="panel-note">What components use. Each token points at a scale step, once for the light theme and once for the dark one.</p>
+          <div class="scroll-x" tabindex="0" role="region" aria-label="Semantic tokens table">
+            <table class="data" id="semantic-table"></table>
+          </div>
+        </section>
+
+        <section role="tabpanel" id="panel-preview" aria-labelledby="tab-preview" tabindex="0" hidden>
+          <h2 class="visually-hidden">Preview</h2>
+          <p class="panel-note">Sample screens for a bike hire shop, styled only with the CSS variables you can export.</p>
+          <div id="preview"></div>
+        </section>
+
+        <section role="tabpanel" id="panel-contrast" aria-labelledby="tab-contrast" tabindex="0" hidden>
+          <h2 class="visually-hidden">Contrast</h2>
+          <div class="verdict" id="verdict"></div>
+          <div class="scroll-x" tabindex="0" role="region" aria-label="Checked color pairs">
+            <table class="data" id="pairs-table"></table>
+          </div>
+          <div id="moves"></div>
+          <h3 class="section-title">Step by step matrix</h3>
+          <p class="panel-note">Contrast of every text step against every background step, as a WCAG ratio.</p>
+          <div class="matrix-controls">
+            <label class="inline-field"><span>Text from</span><select id="matrix-fg"></select></label>
+            <label class="inline-field"><span>Background from</span><select id="matrix-bg"></select></label>
+          </div>
+          <div class="scroll-x" tabindex="0" role="region" aria-label="Contrast matrix">
+            <table class="matrix" id="matrix"></table>
+          </div>
+        </section>
+
+        <section role="tabpanel" id="panel-scale" aria-labelledby="tab-scale" tabindex="0" hidden>
+          <h2 class="visually-hidden">Type and space</h2>
+          <div id="scale-view"></div>
+        </section>
+
+        <section role="tabpanel" id="panel-export" aria-labelledby="tab-export" tabindex="0" hidden>
+          <h2 class="visually-hidden">Export</h2>
+          <div class="export-bar">
+            <fieldset class="seg" id="formats">
+              <legend class="visually-hidden">Format</legend>
+            </fieldset>
+            <div class="export-actions">
+              <button type="button" class="btn btn-solid" id="copy-code">Copy code</button>
+              <button type="button" class="btn" id="download-code">Download file</button>
+            </div>
+          </div>
+          <p class="panel-note" id="format-note"></p>
+          <pre class="code" tabindex="0" role="region" aria-label="Exported tokens"><code id="code"></code></pre>
+        </section>
+      </main>
+    </div>
+
+    <div class="toast" id="live" role="status" aria-live="polite"></div>
+    <script type="module" src="/src/app/main.ts"></script>
+  </body>
+</html>

@@ -8,3 +8,4 @@ dist-cli/
 .vite/
 test-results/
 shots/
+.vite-pid
