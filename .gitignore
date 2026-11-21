@@ -1,0 +1,10 @@
+node_modules/
+dist/
+dist-cli/
+.env
+.env.*
+*.log
+.DS_Store
+.vite/
+test-results/
+shots/
