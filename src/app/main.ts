@@ -99,6 +99,12 @@ for (const id of ['matrix-fg', 'matrix-bg']) {
   $(id).innerHTML = SCALE_NAMES.map((n) => `<option value="${n}">${n[0]!.toUpperCase() + n.slice(1)}</option>`).join('');
 }
 
+// On small screens the secondary recipe groups fold away so the palette is close to the top.
+const narrow = matchMedia('(max-width: 960px)');
+const foldRecipe = () => ($<HTMLDetailsElement>('more').open = !narrow.matches);
+narrow.addEventListener('change', foldRecipe);
+foldRecipe();
+
 // ---- Rendering ----------------------------------------------------------------------
 
 let toastTimer = 0;

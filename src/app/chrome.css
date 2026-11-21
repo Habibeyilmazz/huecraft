@@ -407,6 +407,10 @@ input[type='color']::-moz-color-swatch {
   margin: 2px 0 0;
   accent-color: var(--c-ink);
 }
+/* The disclosure only exists on small screens; see main.ts. */
+.more > summary {
+  display: none;
+}
 .colophon {
   margin-top: 22px;
   color: var(--c-muted);
@@ -798,6 +802,26 @@ input[type='color']::-moz-color-swatch {
     border-bottom: 1px solid var(--c-rule);
   }
   .bar-line {
+    display: none;
+  }
+  .more > summary {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    margin-bottom: 14px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .more > summary::before {
+    content: '+';
+    width: 22px;
+    font-size: 1.25rem;
+    font-weight: 400;
+  }
+  .more[open] > summary::before {
+    content: '\2212';
+  }
+  .more > summary::-webkit-details-marker {
     display: none;
   }
   .colophon {

@@ -232,7 +232,6 @@ try {
       ['preview-dark', '?b=7c3aed&th=dark&tab=preview', true],
       ['contrast', '?b=fde047&lv=AAA&fx=0&th=light&tab=contrast', false],
       ['vision', '?b=c81e5b&th=light&cv=deuteranopia', false],
-      ['export', '?b=0c7c86&th=dark&tab=export', false],
     ];
     for (const [name, query, fullPage] of shots) {
       const { page, close } = await open(query, { width: 1440, height: 900 }, { deviceScaleFactor: 2 });
