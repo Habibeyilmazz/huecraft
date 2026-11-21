@@ -3,7 +3,7 @@
 // met, so the themes are accessible by construction.
 
 import { apcaContrast, luminance, luminanceContrast, wcagContrast } from './color.ts';
-import { STEPS, type ScaleName, type Scales, type Step } from './scales.ts';
+import { STATUSES, STEPS, type ScaleName, type Scales, type Step } from './scales.ts';
 
 export type Theme = 'light' | 'dark';
 export type Level = 'AA' | 'AAA';
@@ -42,7 +42,6 @@ export interface ThemeTokens {
   shadows: { name: string; layers: ShadowLayer[]; value: string }[];
 }
 
-const STATUSES = ['success', 'warning', 'danger', 'info'] as const;
 const UI_MIN = 3;
 export const textMin = (level: Level) => (level === 'AAA' ? 7 : 4.5);
 

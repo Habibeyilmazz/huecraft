@@ -33,7 +33,10 @@ const NEUTRAL_L = [0.985, 0.965, 0.925, 0.87, 0.71, 0.555, 0.445, 0.37, 0.27, 0.
 const CHROMA_SHAPE = [0.14, 0.28, 0.5, 0.74, 0.92, 1, 1, 0.92, 0.8, 0.68, 0.5];
 const NEUTRAL_SHAPE = [0.5, 0.6, 0.8, 1, 1, 1, 1, 1, 0.9, 0.8, 0.7];
 
-const STATUS_HUES = { success: 150, warning: 75, danger: 25, info: 245 } as const;
+export const STATUSES = ['success', 'warning', 'danger', 'info'] as const;
+export type Status = (typeof STATUSES)[number];
+/** Default OKLCH hue of each status scale, degrees. */
+export const STATUS_HUES: Record<Status, number> = { success: 150, warning: 75, danger: 25, info: 245 };
 const STATUS_CHROMA = 0.19; // deliberately beyond sRGB at some steps; gamut mapping trims it
 const MAX_CHROMA = 0.4;
 /** Chroma of the neutral scale at tint = 1. */
@@ -93,19 +96,19 @@ export function neutralScale(brandHex: string, tint: number): Scale {
   return build('neutral', NEUTRAL_L, (i) => chroma * NEUTRAL_SHAPE[i]!, brand.h, null);
 }
 
-export function statusScale(name: keyof typeof STATUS_HUES): Scale {
-  return build(name, CHROMATIC_L, (i) => STATUS_CHROMA * CHROMA_SHAPE[i]!, STATUS_HUES[name], null);
+export function statusScale(name: Status, hue: number): Scale {
+  return build(name, CHROMATIC_L, (i) => STATUS_CHROMA * CHROMA_SHAPE[i]!, hue, null);
 }
 
 export type Scales = Record<ScaleName, Scale>;
 
-export function buildScales(brandHex: string, tint: number): Scales {
+export function buildScales(brandHex: string, tint: number, hues: Record<Status, number> = STATUS_HUES): Scales {
   return {
     brand: brandScale(brandHex),
     neutral: neutralScale(brandHex, tint),
-    success: statusScale('success'),
-    warning: statusScale('warning'),
-    danger: statusScale('danger'),
-    info: statusScale('info'),
+    success: statusScale('success', hues.success),
+    warning: statusScale('warning', hues.warning),
+    danger: statusScale('danger', hues.danger),
+    info: statusScale('info', hues.info),
   };
 }

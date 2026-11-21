@@ -1,8 +1,8 @@
 // The recipe (everything a user can choose) and the token set derived from it.
 
-import { parseColor } from './color.ts';
+import { hexToOklch, parseColor } from './color.ts';
 import { FONT_STACKS, radiusScale, spaceScale, typeScale, type Dimension, type TypeStep } from './dimensions.ts';
-import { buildScales, type Scales } from './scales.ts';
+import { buildScales, STATUS_HUES, STATUSES, type Scales, type Status } from './scales.ts';
 import { buildTheme, type Level, type Ref, type Theme, type ThemeTokens } from './semantic.ts';
 
 export interface Recipe {
@@ -22,6 +22,11 @@ export interface Recipe {
   level: Level;
   /** Move tokens to the nearest step that meets the contrast target. */
   fix: boolean;
+  /** OKLCH hue of each status scale, degrees. */
+  success: number;
+  warning: number;
+  danger: number;
+  info: number;
 }
 
 export const DEFAULT_RECIPE: Recipe = {
@@ -33,7 +38,10 @@ export const DEFAULT_RECIPE: Recipe = {
   radius: 1,
   level: 'AA',
   fix: true,
+  ...STATUS_HUES,
 };
+
+const HUE = { min: 0, max: 360, step: 1 } as const;
 
 export const RATIOS = [1.067, 1.125, 1.2, 1.25, 1.333, 1.414, 1.5] as const;
 
@@ -43,10 +51,15 @@ export const LIMITS = {
   base: { min: 14, max: 20, step: 1 },
   unit: { min: 3, max: 6, step: 0.5 },
   radius: { min: 0, max: 2, step: 0.25 },
+  success: HUE,
+  warning: HUE,
+  danger: HUE,
+  info: HUE,
 } as const;
 
 // Short keys keep shared URLs compact.
-const KEYS = { brand: 'b', tint: 't', ratio: 'r', base: 's', unit: 'u', radius: 'rd', level: 'lv', fix: 'fx' } as const;
+const KEYS = { brand: 'b', tint: 't', ratio: 'r', base: 's', unit: 'u', radius: 'rd', level: 'lv', fix: 'fx',
+  success: 'hs', warning: 'hw', danger: 'hd', info: 'hi' } as const;
 
 /**
  * Validates untrusted recipe input (URL query string, CLI flags). Every field falls
@@ -62,13 +75,13 @@ export function parseRecipe(input: Partial<Record<keyof Recipe, string | undefin
     if (hex) recipe.brand = hex;
     else errors.push(`brand: "${input.brand}" is not a color like #7c3aed, rgb(124 58 237) or oklch(0.54 0.25 293)`);
   }
-  for (const key of ['tint', 'base', 'unit', 'radius'] as const) {
+  for (const key of ['tint', 'base', 'unit', 'radius', ...STATUSES] as const) {
     const raw = input[key];
     if (raw === undefined) continue;
     const n = Number(raw);
     const { min, max } = LIMITS[key];
     if (raw.trim() !== '' && Number.isFinite(n) && n >= min && n <= max) recipe[key] = n;
-    else errors.push(`${key}: "${raw}" must be a number from ${min} to ${max}`);
+    else errors.push(`${key in STATUS_HUES ? `${key} hue` : key}: "${raw}" must be a number from ${min} to ${max}`);
   }
   if (input.ratio !== undefined) {
     const n = Number(input.ratio);
@@ -97,6 +110,7 @@ export function recipeToParams(recipe: Recipe): URLSearchParams {
   p.set(KEYS.radius, String(recipe.radius));
   p.set(KEYS.level, recipe.level);
   p.set(KEYS.fix, recipe.fix ? '1' : '0');
+  for (const status of STATUSES) p.set(KEYS[status], String(recipe[status]));
   return p;
 }
 
@@ -119,6 +133,7 @@ export function recipeToCommand(recipe: Recipe): string {
     `--unit ${recipe.unit}`,
     `--radius ${recipe.radius}`,
     `--level ${recipe.level}`,
+    ...STATUSES.filter((s) => recipe[s] !== STATUS_HUES[s]).map((s) => `--${s}-hue ${recipe[s]}`),
     ...(recipe.fix ? [] : ['--no-fix']),
   ].join(' ');
 }
@@ -144,7 +159,7 @@ export interface TokenSet {
 }
 
 export function buildTokens(recipe: Recipe): TokenSet {
-  const scales = buildScales(recipe.brand, recipe.tint);
+  const scales = buildScales(recipe.brand, recipe.tint, recipe);
   const moves: Move[] = [];
   const themes = {} as Record<Theme, ThemeTokens>;
   for (const theme of ['light', 'dark'] as const) {
@@ -166,4 +181,35 @@ export function buildTokens(recipe: Recipe): TokenSet {
     radius: radiusScale(recipe.radius),
     fonts: FONT_STACKS,
   };
+}
+
+/** Hues closer than this read as the same color family. */
+export const CLASH_DEGREES = 30;
+/** Below this chroma the brand is close enough to grey that its hue does not show. */
+const GREY_CHROMA = 0.05;
+
+export interface Clash {
+  a: 'brand' | Status;
+  b: Status;
+  /** Hue distance, degrees. */
+  degrees: number;
+}
+
+/**
+ * Status scales whose hue sits close to the brand's or to another status's, so a
+ * danger badge could pass for a brand button or a warning for an error.
+ */
+export function hueClashes(recipe: Recipe): Clash[] {
+  const brand = hexToOklch(recipe.brand);
+  const hues: ['brand' | Status, number][] = STATUSES.map((s) => [s, recipe[s]]);
+  if (brand.c >= GREY_CHROMA) hues.unshift(['brand', brand.h]);
+  const clashes: Clash[] = [];
+  hues.forEach(([a, ha], i) => {
+    for (const [b, hb] of hues.slice(i + 1)) {
+      const d = Math.abs(ha - hb) % 360;
+      const degrees = Math.round(Math.min(d, 360 - d));
+      if (degrees < CLASH_DEGREES) clashes.push({ a, b: b as Status, degrees });
+    }
+  });
+  return clashes;
 }

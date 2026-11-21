@@ -3,7 +3,8 @@
 
 import { parseArgs } from 'node:util';
 import { exportTokens, FORMATS, isFormat } from './core/export.ts';
-import { buildTokens, LIMITS, parseRecipe, RATIOS } from './core/tokens.ts';
+import { STATUS_HUES } from './core/scales.ts';
+import { buildTokens, hueClashes, LIMITS, parseRecipe, RATIOS } from './core/tokens.ts';
 
 const USAGE = `huecraft <color> [options]
 
@@ -20,6 +21,9 @@ Options
       --unit <px>    spacing unit, ${LIMITS.unit.min}..${LIMITS.unit.max}   (default: 4)
       --radius <n>   corner roundness, ${LIMITS.radius.min}..${LIMITS.radius.max}   (default: 1)
       --level <l>    WCAG contrast target, AA | AAA   (default: AA)
+      --success-hue <deg>, --warning-hue <deg>, --danger-hue <deg>, --info-hue <deg>
+                     OKLCH hue of a status scale, 0..360
+                     (defaults: ${Object.entries(STATUS_HUES).map(([s, h]) => `${s} ${h}`).join(', ')})
       --no-fix       keep preferred steps even where they miss the contrast target
   -h, --help         show this help
 
@@ -45,6 +49,10 @@ function main(): void {
         unit: { type: 'string' },
         radius: { type: 'string' },
         level: { type: 'string' },
+        'success-hue': { type: 'string' },
+        'warning-hue': { type: 'string' },
+        'danger-hue': { type: 'string' },
+        'info-hue': { type: 'string' },
         'no-fix': { type: 'boolean', default: false },
         help: { type: 'boolean', short: 'h', default: false },
       },
@@ -69,9 +77,17 @@ function main(): void {
     radius: values.radius,
     level: values.level,
     fix: values['no-fix'] ? '0' : '1',
+    success: values['success-hue'],
+    warning: values['warning-hue'],
+    danger: values['danger-hue'],
+    info: values['info-hue'],
   });
   if (errors.length) fail(errors.join('\n          '));
 
+  // A warning, not an error: the tokens are still valid, and stdout stays clean for redirection.
+  for (const { a, b, degrees } of hueClashes(recipe)) {
+    process.stderr.write(`huecraft: note: ${a} and ${b} hues are ${degrees}° apart and may read as one color (--${b}-hue moves ${b})\n`);
+  }
   process.stdout.write(exportTokens(buildTokens(recipe), values.format));
 }
 

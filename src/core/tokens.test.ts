@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { hexToOklch, luminance, luminanceContrast, oklchLuminance, oklchToHex, wcagContrast } from './color.ts';
 import { radiusScale, spaceScale, typeScale, VIEWPORT_MAX, VIEWPORT_MIN } from './dimensions.ts';
 import { brandScale, buildScales, neutralScale, STEPS } from './scales.ts';
-import { buildTokens, DEFAULT_RECIPE, parseRecipe, recipeFromParams, recipeToCommand, recipeToParams } from './tokens.ts';
+import { buildTokens, DEFAULT_RECIPE, hueClashes, parseRecipe, recipeFromParams, recipeToCommand, recipeToParams } from './tokens.ts';
 
 // A spread of brand colors: every 30° of hue at three lightness levels, plus the awkward ones.
 const BRANDS = [
@@ -133,7 +133,8 @@ test('space and radius scales', () => {
 });
 
 test('recipes round-trip through URL params', () => {
-  const recipe = { brand: '#7c3aed', tint: 0.65, ratio: 1.333, base: 18, unit: 4.5, radius: 0.25, level: 'AAA', fix: false } as const;
+  const recipe = { brand: '#7c3aed', tint: 0.65, ratio: 1.333, base: 18, unit: 4.5, radius: 0.25, level: 'AAA', fix: false,
+    success: 140, warning: 90, danger: 0, info: 220.5 } as const;
   const { recipe: back, errors } = recipeFromParams(new URLSearchParams(recipeToParams(recipe).toString()));
   assert.deepEqual(errors, []);
   assert.deepEqual(back, recipe);
@@ -155,4 +156,40 @@ test('untrusted recipe input is validated field by field', () => {
 test('recipeToCommand prints a CLI call that parses back to the same recipe', () => {
   assert.equal(recipeToCommand(DEFAULT_RECIPE), 'huecraft 0c7c86 --tint 0.3 --ratio 1.25 --base 16 --unit 4 --radius 1 --level AA');
   assert.match(recipeToCommand({ ...DEFAULT_RECIPE, fix: false }), / --no-fix$/);
+  assert.match(recipeToCommand({ ...DEFAULT_RECIPE, danger: 10, info: 260 }), / --level AA --danger-hue 10 --info-hue 260$/, 'only moved hues are listed');
+});
+
+test('status hues come from the recipe, are validated, and keep every pair passing', () => {
+  const tokens = buildTokens({ ...DEFAULT_RECIPE, danger: 10 });
+  assert.ok(Math.abs(tokens.scales.danger.swatches[5]!.lch.h - 10) < 1e-9);
+  assert.ok(Math.abs(tokens.scales.success.swatches[5]!.lch.h - 150) < 1e-9, 'other statuses keep their defaults');
+
+  const bad = parseRecipe({ success: '361', warning: '-5', danger: 'red', info: '' });
+  assert.deepEqual(bad.recipe, DEFAULT_RECIPE);
+  assert.deepEqual(bad.errors.map((e) => e.split(':')[0]), ['success hue', 'warning hue', 'danger hue', 'info hue']);
+  assert.equal(parseRecipe({ danger: '0' }).recipe.danger, 0);
+  assert.equal(recipeFromParams(new URLSearchParams('hd=12.5')).recipe.danger, 12.5);
+
+  // Every hue in 30° steps, on a few brands, both levels: the contrast walk must still find a passing step.
+  for (const brand of ['#0c7c86', '#fde047', '#1e1b4b', '#ffffff', '#ff0000']) {
+    for (let hue = 0; hue < 360; hue += 30) {
+      for (const level of ['AA', 'AAA'] as const) {
+        const t = buildTokens({ ...DEFAULT_RECIPE, brand, level, success: hue, warning: hue, danger: hue, info: hue });
+        for (const theme of ['light', 'dark'] as const) {
+          for (const pair of t.themes[theme].pairs) assert.ok(pair.pass, `${brand} hue ${hue} ${level} ${theme}: ${pair.fg} on ${pair.bg}`);
+        }
+      }
+    }
+  }
+});
+
+test('hueClashes flags statuses close to the brand or to each other, across 0°', () => {
+  assert.deepEqual(hueClashes(DEFAULT_RECIPE), [], 'the default petrol brand and statuses are all apart');
+  assert.deepEqual(hueClashes({ ...DEFAULT_RECIPE, brand: '#dc2626' }), [{ a: 'brand', b: 'danger', degrees: 2 }]);
+  assert.deepEqual(hueClashes({ ...DEFAULT_RECIPE, brand: '#2456e6' }).map((c) => c.b), ['info']);
+  // Red brand at 27°, danger moved to 359°: 28° apart the short way round.
+  assert.deepEqual(hueClashes({ ...DEFAULT_RECIPE, brand: '#dc2626', danger: 359 }), [{ a: 'brand', b: 'danger', degrees: 28 }]);
+  assert.deepEqual(hueClashes({ ...DEFAULT_RECIPE, brand: '#dc2626', danger: 345 }), [], 'moved 42° away, the clash is gone');
+  assert.deepEqual(hueClashes({ ...DEFAULT_RECIPE, danger: 60 }), [{ a: 'warning', b: 'danger', degrees: 15 }]);
+  assert.deepEqual(hueClashes({ ...DEFAULT_RECIPE, brand: '#2b2f36', info: 260 }), [], 'a near-grey brand has no hue to clash with');
 });
