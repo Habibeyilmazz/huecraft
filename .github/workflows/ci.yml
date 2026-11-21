@@ -17,11 +17,17 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: 22
           cache: npm
+      - name: Every action is pinned to a commit
+        run: "! grep -nE '^ *(- )?uses: ' .github/workflows/*.yml | grep -vE '@[0-9a-f]{40} # v[0-9]+$'"
+      - name: No known vulnerabilities in dependencies
+        run: npm audit --audit-level=moderate
       - run: npm ci
       - name: Typecheck
         run: npm run typecheck
