@@ -143,7 +143,7 @@ export function renderContrast(tokens: TokenSet, theme: Theme, matrix: { fg: Sca
 export function renderScale(tokens: TokenSet): void {
   const type = [...tokens.type].reverse().map((s) => `<li>
       <code>--text-${s.name}</code>
-      <span class="spec-sample" style="font-size:var(--text-${s.name})">Ride north first</span>
+      <span class="spec-sample${s.minPx === s.maxPx ? ' is-body' : ''}" style="font-size:var(--text-${s.name})">Ride north first</span>
       <span class="spec-meta">${s.minPx === s.maxPx ? px(s.maxPx) : `${px(s.minPx)} to ${px(s.maxPx)}`}</span>
     </li>`).join('');
   const space = tokens.space.map((s) => `<li>
