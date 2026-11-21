@@ -345,7 +345,7 @@ try {
         const { page, close } = await open(`?tab=${tab}&th=${theme}`, undefined, { bypassCSP: true });
         await page.addScriptTag({ path: axePath });
         // The contrast samples show deliberately unreadable pairs; that is their job.
-        const result = await page.evaluate(() => window.axe.run({ exclude: ['#matrix .mx-sample', '#pairs-table .sample'] }).then((r) => r.violations));
+        const result = await page.evaluate(() => window.axe.run({ exclude: ['#matrix .mx-sample', '#pairs-table .sample'] }, { rules: { 'target-size': { enabled: true } } }).then((r) => r.violations));
         const summary = result.map((v) => `${v.id}: ${v.nodes.length} node(s), e.g. ${v.nodes[0].target} — ${v.nodes[0].failureSummary?.split('\n')[1] ?? ''}`);
         assert.deepEqual(summary, [], `${tab} / ${theme}`);
         await close();
