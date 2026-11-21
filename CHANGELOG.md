@@ -5,6 +5,20 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Second security pass (round 11)
+
+- **Fixed: a crafted studio link could drive the terminal.** `huecraft '?b=%1B]0;x%07%1B[2J'` echoed the decoded
+  value raw in its error message, so escape sequences (window title, screen clear, and on some terminals clipboard
+  writes or hyperlinks) reached the terminal. Every echoed value now goes through `quote()` in `core/tokens.ts`:
+  control and bidi characters are shown as `\uXXXX` and long values are cut at 80 characters. Regression test in
+  `export.test.ts` (fails without the fix); 38 unit tests and all e2e checks pass.
+- Re-checked, nothing to change: the studio drops URL errors and every `innerHTML` sink takes escaped or fixed
+  text; exports are built only from validated numbers and `#rrggbb`; dev and preview servers bind to localhost;
+  workflows have read-only tokens, pinned actions and no `pull_request_target`; `npm audit` clean; no secrets in
+  the git history.
+- Still open, not code bugs: Pages workflow never run and no homepage (owner enables Pages); Figma payload never
+  imported; only Chromium; no social image; Lighthouse not re-run after the radio fix.
+
 ### Design pass (round 10)
 
 Looked at every tab at 1440px and 390px in both themes, the bad-color state and keyboard focus, and ran Lighthouse
