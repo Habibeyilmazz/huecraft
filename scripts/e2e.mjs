@@ -12,7 +12,8 @@ const BASE = `http://localhost:${PORT}/`;
 const SHOTS = process.argv.includes('--shots');
 const axePath = createRequire(import.meta.url).resolve('axe-core/axe.min.js');
 
-const server = spawn('npx', ['vite', 'preview', '--port', String(PORT), '--strictPort'], { stdio: 'ignore' });
+// Run Vite's own entry point so the server is our direct child and stops when we kill it.
+const server = spawn(process.execPath, ['node_modules/vite/bin/vite.js', 'preview', '--port', String(PORT), '--strictPort'], { stdio: 'ignore' });
 const browser = await chromium.launch();
 let failed = false;
 

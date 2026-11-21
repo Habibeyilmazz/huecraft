@@ -219,8 +219,8 @@ hexInput.addEventListener('input', () => {
 // Report a bad value once the field is committed, not on every keystroke.
 hexInput.addEventListener('change', () => {
   const invalid = !normalizeHex(hexInput.value);
-  hexInput.toggleAttribute('aria-invalid', invalid);
   if (invalid) hexInput.setAttribute('aria-invalid', 'true');
+  else hexInput.removeAttribute('aria-invalid');
   $('brand-error').hidden = !invalid;
 });
 hexInput.addEventListener('blur', () => {

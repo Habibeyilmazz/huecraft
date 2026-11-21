@@ -40,7 +40,7 @@ export function renderPalette(tokens: TokenSet): void {
     });
     return `<section class="scale" aria-labelledby="scale-${name}">
       <div class="scale-head"><h3 id="scale-${name}">${title(name)}</h3><p>${scaleNote(scale, tokens)}</p></div>
-      <ol class="strip">${chips.join('')}</ol>
+      <div class="strip-box"><ol class="strip">${chips.join('')}</ol></div>
     </section>`;
   }).join('');
 
