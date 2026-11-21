@@ -211,3 +211,29 @@ test('cli: a crafted link cannot write terminal control or bidi characters to st
   }
   assert.match(run('?b=%1B[2J').stderr, /"\\u001b\[2J"/);
 });
+
+test('random recipes: link round trip, no NaN or undefined in any export, JSON formats parse', () => {
+  let seed = 1; // fixed LCG so a failure reproduces
+  const rand = () => (seed = (seed * 1664525 + 1013904223) >>> 0) / 2 ** 32;
+  const onGrid = (key: 'tint' | 'base' | 'unit' | 'radius' | 'success' | 'warning' | 'danger' | 'info') => {
+    const { min, max, step } = LIMITS[key];
+    return String(min + Math.floor(rand() * (Math.round((max - min) / step) + 1)) * step);
+  };
+  for (let i = 0; i < 60; i++) {
+    const { recipe, errors } = parseRecipe({
+      brand: `#${Math.floor(rand() * 0x1000000).toString(16).padStart(6, '0')}`,
+      tint: onGrid('tint'), base: onGrid('base'), unit: onGrid('unit'), radius: onGrid('radius'),
+      success: onGrid('success'), warning: onGrid('warning'), danger: onGrid('danger'), info: onGrid('info'),
+      ratio: String(RATIOS[Math.floor(rand() * RATIOS.length)]), level: rand() < 0.5 ? 'AA' : 'AAA', fix: rand() < 0.5 ? '1' : '0',
+      font: rand() < 0.5 ? 'Ünï 日本' : '', heading: rand() < 0.5 ? 'Foo-Bar' : '',
+    });
+    assert.deepEqual(errors, []);
+    assert.deepEqual(recipeFromParams(recipeToParams(recipe)).recipe, recipe);
+    const tokens = buildTokens(recipe);
+    for (const format of Object.keys(FORMATS) as Format[]) {
+      const out = exportTokens(tokens, format);
+      assert.doesNotMatch(out, /NaN|undefined|Infinity|\[object/, `${format} for ${recipeToCommand(recipe)}`);
+      if (format === 'json' || format === 'figma') JSON.parse(out);
+    }
+  }
+});
