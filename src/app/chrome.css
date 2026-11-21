@@ -39,6 +39,7 @@
 html {
   color-scheme: light;
   -webkit-text-size-adjust: 100%;
+  scroll-padding-top: 64px; /* keyboard focus lands below the sticky tabs, not under them */
 }
 html[data-theme='dark'] {
   color-scheme: dark;
@@ -455,8 +456,13 @@ input[type='color']::-moz-color-swatch {
 #workspace:focus {
   outline: none;
 }
+/* The tabs stay in reach on a long panel. Sticky also makes this the offsetParent of the
+   tabs, which revealTab() in main.ts relies on. */
 .tabs {
-  position: relative; /* offsetParent of the tabs, for revealTab() in main.ts */
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: var(--c-page);
   display: flex;
   gap: 4px;
   margin: 0 calc(var(--gutter) * -1);
