@@ -184,6 +184,7 @@ npm run dev         # studio with hot reload on port 4140
 npm run typecheck   # tsc, strict
 npm test            # unit tests (node:test, runs the TypeScript directly)
 npm run build       # production build in dist/
+npm run preview     # serve that build on port 4141
 npm run e2e         # Playwright + axe against the build (run "npm run build" first)
 ```
 

@@ -5,6 +5,20 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### First-run review
+
+Cloned the repo fresh and followed the README literally: `npm ci`, `npm run dev` on 4140, both CLI lines (the
+`npx github:` one included), a studio link through the CLI, `npm test`, `npm run build`, `npm run e2e` (20 checks),
+and the build served from a `/huecraft/` sub-path as Pages would. All of it worked. Then read `src/` as a reviewer.
+
+- **Fixed: `oklch(54 0.25 293)` silently became white.** CSS clamps lightness, so a missing `%` gave a white brand.
+  Lightness outside 0..1 (or 0%..100%) is now rejected with the usual message.
+- **Fixed: `--format TAILWIND` was refused while `--level aaa` was taken.** The format is now case-insensitive.
+- **Changed: "missing color" now says why it may be missing** (an unquoted `#` starts a shell comment).
+- README: `npm run preview` listed under Development.
+- Still open, not code bugs: Pages workflow never run and no homepage (owner enables Pages); Figma payload never
+  imported; only Chromium (Firefox/WebKit are not installed here); no social image (needs a public URL first).
+
 ### Performance and accessibility pass
 
 - **Added: `--fix` in the CLI**, the counterpart of `--no-fix`, so a link carrying `fx=0` can be turned back on
