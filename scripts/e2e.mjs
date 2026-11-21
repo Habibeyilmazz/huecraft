@@ -191,6 +191,14 @@ try {
     await wide.close();
   });
 
+  await check('a Windows contrast theme keeps the swatches and shows which option is selected', async () => {
+    const { page, close } = await open('?th=light', undefined, { forcedColors: 'active' });
+    const bg = (sel) => page.locator(sel).first().evaluate((e) => getComputedStyle(e).backgroundColor);
+    assert.equal(await bg('#scales .chip.is-anchor'), 'rgb(12, 124, 134)');
+    assert.notEqual(await bg('.seg input:checked + span'), await bg('.seg input:not(:checked) + span'));
+    await close();
+  });
+
   await check('contrast matrix follows its two selects', async () => {
     const { page, close } = await open('?tab=contrast');
     assert.equal(await page.locator('#matrix tbody td').count(), 121);

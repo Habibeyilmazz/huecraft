@@ -1079,6 +1079,40 @@ input[type='color']::-moz-color-swatch {
   }
 }
 
+/* Windows contrast themes repaint every background. A color tool still has to show its colors,
+   and which option is selected, so those keep what they were given. */
+@media (forced-colors: active) {
+  .ramp-mark,
+  .mini-ramp,
+  .preset,
+  .chip,
+  .dot,
+  .sample,
+  .mx-sample,
+  .pv {
+    forced-color-adjust: none;
+  }
+  .seg input:checked + span,
+  .result-fail {
+    forced-color-adjust: none;
+    background: Highlight;
+    color: HighlightText;
+  }
+  .tabs [role='tab']::after {
+    forced-color-adjust: none;
+    background: Highlight;
+  }
+  .preset[aria-pressed='true'] {
+    box-shadow: 0 0 0 2px Canvas, 0 0 0 4px Highlight;
+  }
+  .chip.is-anchor {
+    box-shadow: 0 0 0 2px Canvas, 0 0 0 3px CanvasText;
+  }
+  .toast {
+    border: 1px solid CanvasText;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
