@@ -286,10 +286,12 @@ select {
 }
 .color-row {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
 }
+/* The text field takes the whole first line, so an oklch() value as long as the readout's fits. */
 .color-row .field {
-  flex: 1;
+  flex: 1 1 100%;
   min-width: 0;
 }
 .color-row input[type='text'] {

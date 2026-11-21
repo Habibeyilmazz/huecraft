@@ -119,6 +119,8 @@ try {
     await settle(page);
     assert.equal(await cssVar(page, '--color-primary'), '#2456e6');
     await page.fill('#brand-hex', 'oklch(54.13% 0.2466 293.01)');
+    const clipped = await page.locator('#brand-hex').evaluate((e) => e.scrollWidth - e.clientWidth);
+    assert.equal(clipped, 0, 'the whole oklch() value fits in the field');
     await page.locator('#brand-hex').blur();
     await settle(page);
     assert.equal(await cssVar(page, '--color-primary'), '#7c3aed');
