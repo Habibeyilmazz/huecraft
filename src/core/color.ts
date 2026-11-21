@@ -148,7 +148,7 @@ export function formatOklch(lch: Oklch): string {
   return `oklch(${round(l * 100, 2)}% ${c} ${h})`;
 }
 
-const NUMBER = /^(-?(?:\d+\.?\d*|\.\d+))(%|deg)?$/;
+const NUMBER = /^(-?(?:\d+(?:\.\d*)?|\.\d+))(%|deg)?$/;
 /** A CSS number, or a percentage of `full`; hues may carry `deg`. NaN when it is neither. */
 function channel(part: string, full: number, unit: '%' | 'deg' = '%'): number {
   const m = NUMBER.exec(part);
@@ -164,8 +164,9 @@ function channel(part: string, full: number, unit: '%' | 'deg' = '%'): number {
 export function parseColor(input: string): string | null {
   const hex = normalizeHex(input);
   if (hex) return hex;
-  const m = /^(rgb|oklch)\(\s*([^()]*?)\s*\)$/i.exec(input.trim());
-  const parts = m?.[2]!.split(/\s*,\s*|\s+/);
+  // No adjacent \s* around a lazy group: that backtracks cubically, and a shared link can carry the input.
+  const m = /^(rgb|oklch)\(([^()]*)\)$/i.exec(input.trim());
+  const parts = m?.[2]!.trim().split(/\s*,\s*|\s+/);
   if (!m || parts?.length !== 3) return null;
   const [a, b, c] = parts as [string, string, string];
   const rgb = m[1]!.toLowerCase() === 'rgb';

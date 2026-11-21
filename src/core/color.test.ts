@@ -46,6 +46,16 @@ test('parseColor reads hex, rgb() and oklch(), and rejects everything else', () 
   }
 });
 
+test('parseColor stays linear on long hostile input (a shared link carries it)', () => {
+  // These took 13 s at 4,000 characters when the pattern backtracked cubically.
+  const long = 'x'.padStart(4_000, ' ');
+  for (const bad of [`rgb(${long}`, `oklch(1${long}`, `rgb(${'1'.repeat(4_000)}x 0 0)`]) {
+    const start = performance.now();
+    assert.equal(parseColor(bad), null);
+    assert.ok(performance.now() - start < 50, `${bad.slice(0, 8)}... took ${performance.now() - start} ms`);
+  }
+});
+
 test('hex to OKLCH matches published reference values', () => {
   // Reference values from the CSS Color 4 / oklch.com conversions.
   const cases: [string, number, number, number][] = [
