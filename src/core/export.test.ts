@@ -1,0 +1,105 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { execFileSync, spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+import { exportTokens, FORMATS, isFormat } from './export.ts';
+import { buildTokens, DEFAULT_RECIPE } from './tokens.ts';
+
+const tokens = buildTokens({ ...DEFAULT_RECIPE, brand: '#7c3aed' });
+
+test('CSS: scales, both themes, a P3 block, and every var() points at a declared property', () => {
+  const css = exportTokens(tokens, 'css');
+  assert.match(css, /--color-brand-600: #7c3aed;/);
+  assert.match(css, /\[data-theme="dark"\] \{/);
+  assert.match(css, /@media \(prefers-color-scheme: dark\) \{\n {2}:root:not\(\[data-theme="light"\]\)/);
+  assert.match(css, /@media \(color-gamut: p3\) \{[\s\S]*--color-success-\d+: oklch\(/);
+  assert.match(css, /--text-xl: clamp\(/);
+  const declared = new Set([...css.matchAll(/^\s*(--[\w-]+):/gm)].map((m) => m[1]));
+  const used = [...css.matchAll(/var\((--[\w-]+)\)/g)].map((m) => m[1]);
+  assert.ok(used.length > 50);
+  for (const name of used) assert.ok(declared.has(name), `${name} is declared`);
+  assert.equal((css.match(/\{/g) ?? []).length, (css.match(/\}/g) ?? []).length, 'balanced braces');
+});
+
+test('Tailwind v4: an @theme block using Tailwind namespaces', () => {
+  const tw = exportTokens(tokens, 'tailwind');
+  assert.match(tw, /@import "tailwindcss";\n\n@theme \{/);
+  assert.match(tw, /--color-primary: var\(--color-brand-600\);/);
+  assert.match(tw, /--spacing: 0\.25rem;/);
+  assert.match(tw, /--text-base: 1rem;/);
+  assert.match(tw, /@layer base \{\n {2}\[data-theme="dark"\]/);
+  assert.equal((tw.match(/\{/g) ?? []).length, (tw.match(/\}/g) ?? []).length);
+});
+
+test('design tokens JSON: DTCG types, color objects, and aliases that resolve', () => {
+  const doc = JSON.parse(exportTokens(tokens, 'json'));
+  assert.equal(doc.color.$type, 'color');
+  assert.deepEqual(doc.color.brand['600'].$value, { colorSpace: 'srgb', components: [0.4863, 0.2275, 0.9294], hex: '#7c3aed' });
+  assert.deepEqual(doc.space['4'].$value, { value: 1, unit: 'rem' });
+  assert.match(doc.fontSize.xl.$extensions['huecraft.fluid'], /^clamp\(/);
+  assert.deepEqual(doc.fontFamily.sans.$value.slice(0, 2), ['system-ui', '-apple-system']);
+  for (const theme of ['light', 'dark']) {
+    for (const [name, tok] of Object.entries<{ $value: string }>(doc.semantic[theme])) {
+      if (name.startsWith('$')) continue;
+      const path = /^\{(.+)\}$/.exec(tok.$value)![1]!.split('.');
+      const target = path.reduce((node, key) => node?.[key], doc);
+      assert.ok(target?.$value?.hex, `${theme}.${name} -> ${tok.$value} resolves to a color`);
+    }
+  }
+});
+
+test('Figma payload: every variable has a value per mode and every alias target exists', () => {
+  const doc = JSON.parse(exportTokens(tokens, 'figma'));
+  const ids = new Set(doc.variables.map((v: { id: string }) => v.id));
+  assert.equal(ids.size, doc.variables.length, 'ids are unique');
+  const modes: Record<string, string[]> = { primitives: ['primitives-value'], semantic: ['semantic-light', 'semantic-dark'] };
+  for (const v of doc.variables) {
+    for (const mode of modes[v.variableCollectionId]!) {
+      const entry = doc.variableModeValues.find((m: { variableId: string; modeId: string }) => m.variableId === v.id && m.modeId === mode);
+      assert.ok(entry, `${v.id} has a ${mode} value`);
+      if (entry.value?.type === 'VARIABLE_ALIAS') assert.ok(ids.has(entry.value.id), `${entry.value.id} exists`);
+    }
+  }
+  const brand = doc.variableModeValues.find((m: { variableId: string }) => m.variableId === 'primitives/brand/600');
+  assert.deepEqual(brand.value, { r: 0.4863, g: 0.2275, b: 0.9294, a: 1 });
+});
+
+test('SCSS: maps for scales, themes and dimensions', () => {
+  const scss = exportTokens(tokens, 'scss');
+  assert.match(scss, /\$color-brand: \(\n {2}50: #[0-9a-f]{6},/);
+  assert.match(scss, /\$theme-dark: \(\n {2}'bg': #[0-9a-f]{6}, \/\/ neutral-950/);
+  assert.match(scss, /\$space: \(\n {2}'0-5': 0\.125rem,/);
+  assert.equal((scss.match(/\(/g) ?? []).length, (scss.match(/\)/g) ?? []).length);
+});
+
+test('every format is non-empty and isFormat guards the names', () => {
+  for (const format of Object.keys(FORMATS)) {
+    assert.ok(isFormat(format));
+    assert.ok(exportTokens(tokens, format as keyof typeof FORMATS).length > 500);
+  }
+  assert.equal(isFormat('toString'), false);
+  assert.equal(isFormat('xml'), false);
+});
+
+const CLI = fileURLToPath(new URL('../cli.ts', import.meta.url));
+const run = (...args: string[]) => spawnSync(process.execPath, [CLI, ...args], { encoding: 'utf8' });
+
+test('CLI prints the same output as the library and accepts the color with or without #', () => {
+  const expected = exportTokens(tokens, 'scss');
+  assert.equal(execFileSync(process.execPath, [CLI, '#7c3aed', '--format', 'scss'], { encoding: 'utf8' }), expected);
+  assert.equal(run('7C3AED', '-f', 'scss').stdout, expected);
+  assert.match(run('7c3aed').stdout, /^\/\* Generated by huecraft/);
+  assert.match(run('7c3aed', '--level', 'AAA', '--no-fix').stdout, /--level AAA --no-fix \*\//);
+});
+
+test('CLI rejects bad input with exit code 2 and a message on stderr', () => {
+  for (const args of [[], ['nope'], ['7c3aed', '--format', 'xml'], ['7c3aed', '--tint', '9'], ['7c3aed', '--bogus'], ['7c3aed', 'ffffff']]) {
+    const result = run(...args);
+    assert.equal(result.status, 2, args.join(' '));
+    assert.equal(result.stdout, '');
+    assert.match(result.stderr, /^huecraft: /);
+  }
+  const help = run('--help');
+  assert.equal(help.status, 0);
+  assert.match(help.stdout, /^huecraft <color> \[options\]/);
+});
