@@ -139,9 +139,14 @@ const round = (v: number, places: number) => {
   return Math.round(v * f) / f;
 };
 
+/** Rounds to the precision `formatOklch` prints, so math on the result matches the emitted CSS. */
+export const roundOklch = ({ l, c, h }: Oklch): Oklch => ({ l: round(l, 4), c: round(c, 4), h: round(h, 2) });
+
 /** CSS `oklch()` notation. */
-export const formatOklch = ({ l, c, h }: Oklch): string =>
-  `oklch(${round(l * 100, 2)}% ${round(c, 4)} ${round(h, 2)})`;
+export function formatOklch(lch: Oklch): string {
+  const { l, c, h } = roundOklch(lch);
+  return `oklch(${round(l * 100, 2)}% ${c} ${h})`;
+}
 
 // ---- Contrast -----------------------------------------------------------
 
@@ -151,12 +156,21 @@ export function luminance(hex: string): number {
   return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 }
 
-/** WCAG 2.x contrast ratio, 1..21. Order of arguments does not matter. */
-export function wcagContrast(a: string, b: string): number {
-  const la = luminance(a);
-  const lb = luminance(b);
-  return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
+/**
+ * Relative luminance of any OKLCH color, including ones outside sRGB: the
+ * luminance weights are linear, so they hold for out-of-gamut channel values.
+ */
+export function oklchLuminance(lch: Oklch): number {
+  const [r, g, b] = oklchToLinearSrgb(lch);
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 }
+
+/** WCAG 2.x contrast ratio of two relative luminances, 1..21. */
+export const luminanceContrast = (la: number, lb: number): number =>
+  (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
+
+/** WCAG 2.x contrast ratio of two sRGB hex colors. Order of arguments does not matter. */
+export const wcagContrast = (a: string, b: string): number => luminanceContrast(luminance(a), luminance(b));
 
 /**
  * APCA lightness contrast (Lc), following the public APCA-W3 0.1.9 / 0.0.98G-4g

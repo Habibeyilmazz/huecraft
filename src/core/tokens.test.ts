@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { hexToOklch, oklchToHex, wcagContrast } from './color.ts';
+import { hexToOklch, luminance, luminanceContrast, oklchLuminance, oklchToHex, wcagContrast } from './color.ts';
 import { radiusScale, spaceScale, typeScale, VIEWPORT_MAX, VIEWPORT_MIN } from './dimensions.ts';
 import { brandScale, buildScales, neutralScale, STEPS } from './scales.ts';
 import { buildTokens, DEFAULT_RECIPE, parseRecipe, recipeFromParams, recipeToCommand, recipeToParams } from './tokens.ts';
@@ -68,7 +68,8 @@ test('pair checks report real ratios; fix off keeps preferred steps and lists th
   const raw = buildTokens({ ...DEFAULT_RECIPE, brand: '#fde047', level: 'AAA', fix: false });
   const hex = (t: typeof fixed, name: string) => t.themes.light.tokens.find((tok) => tok.name === name)!.hex;
   for (const pair of fixed.themes.light.pairs) {
-    assert.equal(pair.ratio, wcagContrast(hex(fixed, pair.fg), hex(fixed, pair.bg)));
+    const srgb = wcagContrast(hex(fixed, pair.fg), hex(fixed, pair.bg));
+    assert.ok(pair.ratio <= srgb && pair.ratio > srgb - 0.5, 'the sRGB ratio, or slightly less where P3 lowers it');
   }
   assert.ok(raw.themes.light.pairs.some((p) => !p.pass), 'a yellow brand at AAA fails somewhere without fixing');
   assert.ok(raw.moves.length > 0);
@@ -79,6 +80,31 @@ test('pair checks report real ratios; fix off keeps preferred steps and lists th
     assert.deepEqual(fixed.themes.light.tokens.find((t) => t.name === move.token)!.ref, move.to);
     assert.deepEqual(raw.themes.light.tokens.find((t) => t.name === move.token)!.ref, move.from);
   }
+});
+
+test('contrast holds for the P3 overrides too, not only the sRGB hex values', () => {
+  // With this green, primary-text passes AA in sRGB at brand-600 but its P3 override does not.
+  const tokens = buildTokens({ ...DEFAULT_RECIPE, brand: '#0dbb3e', tint: 0.5 });
+  const p3Luminance = (name: string) => {
+    const ref = tokens.themes.light.tokens.find((t) => t.name === name)!.ref;
+    if (ref === 'white') return 1;
+    const swatch = tokens.scales[ref.scale].swatches.find((s) => s.step === ref.step)!;
+    if (!swatch.p3) return luminance(swatch.hex);
+    // Recompute independently from the CSS string that gets exported.
+    const [l, c, h] = /^oklch\(([\d.]+)% ([\d.]+) ([\d.]+)\)$/.exec(swatch.p3)!.slice(1).map(Number);
+    return oklchLuminance({ l: l! / 100, c: c!, h: h! });
+  };
+  let checkedP3 = 0;
+  for (const pair of tokens.themes.light.pairs) {
+    const wide = luminanceContrast(p3Luminance(pair.fg), p3Luminance(pair.bg));
+    assert.ok(wide >= pair.required, `${pair.fg} on ${pair.bg} is ${wide.toFixed(3)} on P3 screens`);
+    assert.ok(Math.abs(pair.ratio - Math.min(wide, wcagContrast(
+      tokens.themes.light.tokens.find((t) => t.name === pair.fg)!.hex,
+      tokens.themes.light.tokens.find((t) => t.name === pair.bg)!.hex,
+    ))) < 1e-9);
+    if (wide < pair.ratio + 1e-9) checkedP3++;
+  }
+  assert.ok(checkedP3 > 0, 'at least one pair is limited by its P3 rendering');
 });
 
 test('type scale: fluid sizes hit their min and max exactly at the viewport bounds', () => {

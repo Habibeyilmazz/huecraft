@@ -12,7 +12,8 @@ First release.
 - Core token generator in `src/core`, with no dependencies: OKLCH conversion, chroma-only gamut mapping to sRGB and
   Display P3, WCAG 2 contrast, APCA Lc, color-vision matrices.
 - Six 11-step color scales (brand anchored on the input color, tinted neutral, success, warning, danger, info).
-- Semantic tokens for light and dark themes that are moved to the nearest step meeting WCAG AA or AAA.
+- Semantic tokens for light and dark themes that are moved to the nearest step meeting WCAG AA or AAA, checked
+  against both the sRGB values and the Display P3 overrides.
 - Fluid modular type scale, spacing, radius and shadow scales.
 - Exports: CSS custom properties, Tailwind v4 `@theme`, W3C design-tokens JSON, Figma variables payload, SCSS.
 - Web studio (`src/app`): recipe controls, palette, live preview, contrast table and matrix, type and space

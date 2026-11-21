@@ -60,6 +60,7 @@ test('Figma payload: every variable has a value per mode and every alias target 
       if (entry.value?.type === 'VARIABLE_ALIAS') assert.ok(ids.has(entry.value.id), `${entry.value.id} exists`);
     }
   }
+  for (const v of doc.variables) assert.doesNotMatch(v.name, /[.{}]/, 'Figma rejects these characters in names');
   const brand = doc.variableModeValues.find((m: { variableId: string }) => m.variableId === 'primitives/brand/600');
   assert.deepEqual(brand.value, { r: 0.4863, g: 0.2275, b: 0.9294, a: 1 });
 });

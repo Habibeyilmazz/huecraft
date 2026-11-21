@@ -1,7 +1,7 @@
 // 11-step OKLCH color scales: brand (anchored on the input color), a neutral
 // tinted toward the brand hue, and four status scales.
 
-import { formatOklch, gamutMap, hexToOklch, oklchToHex, type Oklch } from './color.ts';
+import { formatOklch, gamutMap, hexToOklch, oklchLuminance, oklchToHex, roundOklch, type Oklch } from './color.ts';
 
 export const STEPS = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950] as const;
 export type Step = (typeof STEPS)[number];
@@ -15,6 +15,8 @@ export interface Swatch {
   hex: string;
   /** CSS oklch() for wide-gamut screens, set only when P3 can show more chroma than sRGB. */
   p3: string | null;
+  /** Relative luminance of the `p3` color, for checking contrast as P3 screens show it. */
+  p3Luminance: number | null;
 }
 export interface Scale {
   name: ScaleName;
@@ -40,11 +42,13 @@ export const MAX_NEUTRAL_CHROMA = 0.04;
 function swatch(step: Step, target: Oklch): Swatch {
   const lch = gamutMap(target, 'srgb');
   const wide = gamutMap(target, 'p3');
+  const richer = wide.c - lch.c > 0.004;
   return {
     step,
     lch,
     hex: oklchToHex(lch),
-    p3: wide.c - lch.c > 0.004 ? formatOklch(wide) : null,
+    p3: richer ? formatOklch(wide) : null,
+    p3Luminance: richer ? oklchLuminance(roundOklch(wide)) : null,
   };
 }
 
@@ -77,7 +81,7 @@ export function brandScale(hex: string): Scale {
   });
   const scale = build('brand', lightness, (i) => (brand.c * CHROMA_SHAPE[i]!) / CHROMA_SHAPE[anchor]!, brand.h, anchor);
   // Pin the anchor to the exact input so rounding can never drift it.
-  scale.swatches[anchor] = { step: STEPS[anchor]!, lch: brand, hex: oklchToHex(brand), p3: null };
+  scale.swatches[anchor] = { step: STEPS[anchor]!, lch: brand, hex: oklchToHex(brand), p3: null, p3Luminance: null };
   return scale;
 }
 

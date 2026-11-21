@@ -194,7 +194,8 @@ function figma(t: TokenSet): string {
   }
   add('primitives', 'white', 'COLOR', [['primitives-value', rgba('#ffffff')]]);
   for (const s of t.type) add('primitives', `font-size/${s.name}`, 'FLOAT', [['primitives-value', round(s.maxPx, 2)]]);
-  for (const s of t.space) add('primitives', `space/${s.name.replace('_', '.')}`, 'FLOAT', [['primitives-value', s.px]]);
+  // Figma variable names may not contain a dot, so half steps stay as 0_5 and 1_5.
+  for (const s of t.space) add('primitives', `space/${s.name}`, 'FLOAT', [['primitives-value', s.px]]);
   for (const r of t.radius) add('primitives', `radius/${r.name}`, 'FLOAT', [['primitives-value', r.px]]);
 
   const alias = (ref: Ref) => ({ type: 'VARIABLE_ALIAS', id: `primitives/${primitiveName(ref)}` });

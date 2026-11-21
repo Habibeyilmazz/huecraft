@@ -81,8 +81,9 @@ export function renderContrast(tokens: TokenSet, theme: Theme, matrix: { fg: Sca
     <h3>${failing ? `${failing} color ${failing === 1 ? 'pair misses' : 'pairs miss'} ${recipe.level}` : `Every color pair meets ${recipe.level}`}</h3>
     ${!recipe.fix && moves.length ? '<button type="button" class="btn btn-solid" data-action="apply-fixes">Apply the suggested fixes</button>' : ''}
     <p>Light theme: ${count('light')}. Dark theme: ${count('dark')}. Text needs ${textMin(recipe.level)} to 1, and fills,
-    borders and focus rings need 3 to 1 (WCAG 2.2). The table shows the ${theme} theme; switch themes in the top bar.
-    APCA values are shown for reference and do not affect the result.</p>`;
+    borders and focus rings need 3 to 1 (WCAG 2.2). Each ratio is the lower of how the pair renders in sRGB and on a
+    Display P3 screen. The table shows the ${theme} theme; switch themes in the top bar. APCA values are for reference
+    and do not affect the result.</p>`;
 
   const suggestion = (pair: PairCheck): string => {
     if (pair.pass) return '';

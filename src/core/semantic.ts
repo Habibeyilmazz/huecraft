@@ -2,7 +2,7 @@
 // scale step; with `fix` on, steps are walked until their contrast targets are
 // met, so the themes are accessible by construction.
 
-import { apcaContrast, wcagContrast } from './color.ts';
+import { apcaContrast, luminance, luminanceContrast, wcagContrast } from './color.ts';
 import { STEPS, type ScaleName, type Scales, type Step } from './scales.ts';
 
 export type Theme = 'light' | 'dark';
@@ -21,6 +21,7 @@ export interface PairCheck {
   /** text needs 4.5 (AA) / 7 (AAA); `ui` is the 3:1 non-text minimum (WCAG 1.4.11). */
   kind: 'text' | 'ui';
   required: number;
+  /** WCAG ratio; the lower of the sRGB and the Display P3 rendering. */
   ratio: number;
   apca: number;
   pass: boolean;
@@ -42,7 +43,13 @@ export const refVar = (ref: Ref) => `--color-${refLabel(ref)}`;
 export function buildTheme(scales: Scales, theme: Theme, level: Level, fix: boolean): ThemeTokens {
   const light = theme === 'light';
   const T = textMin(level);
-  const hexOf = (ref: Ref) => (ref === 'white' ? '#ffffff' : scales[ref.scale].swatches[STEPS.indexOf(ref.step)]!.hex);
+  const swatchOf = (ref: Ref) => (ref === 'white' ? null : scales[ref.scale].swatches[STEPS.indexOf(ref.step)]!);
+  const hexOf = (ref: Ref) => swatchOf(ref)?.hex ?? '#ffffff';
+  // Wide-gamut screens show the P3 override where a step has one, at a slightly
+  // different luminance. A pair must pass both ways, so take the lower ratio.
+  const p3Luminance = (ref: Ref) => swatchOf(ref)?.p3Luminance ?? luminance(hexOf(ref));
+  const contrast = (a: Ref, b: Ref) =>
+    Math.min(wcagContrast(hexOf(a), hexOf(b)), luminanceContrast(p3Luminance(a), p3Luminance(b)));
   const at = (scale: ScaleName, index: number): Ref => ({ scale, step: STEPS[Math.min(10, Math.max(0, index))]! });
   const idx = (step: Step) => STEPS.indexOf(step);
   // Away from the page background: darker steps in light themes, lighter in dark.
@@ -54,7 +61,8 @@ export function buildTheme(scales: Scales, theme: Theme, level: Level, fix: bool
     tokens.push({ name, ref, hex: hexOf(ref) });
     return ref;
   };
-  const hex = (name: string) => tokens.find((t) => t.name === name)!.hex;
+  const token = (name: string) => tokens.find((t) => t.name === name)!;
+  const hex = (name: string) => token(name).hex;
 
   /** First step from `start`, walking `dir`, where `ok` holds; the preferred step when not fixing. */
   const walk = (scale: ScaleName, start: number, dir: number, ok: (ref: Ref) => boolean): Ref => {
@@ -63,17 +71,16 @@ export function buildTheme(scales: Scales, theme: Theme, level: Level, fix: bool
     return at(scale, dir > 0 ? 10 : 0); // nothing passes: take the extreme, the pair check reports it
   };
   const clears = (min: number, ...against: string[]) => (ref: Ref) =>
-    against.every((name) => wcagContrast(hexOf(ref), hex(name)) >= min);
+    against.every((name) => contrast(ref, token(name).ref) >= min);
 
   // Text that sits on a solid fill: white or the darkest neutral, whichever reads better.
   const dark: Ref = at('neutral', 10);
-  const onColor = (fill: Ref): Ref =>
-    wcagContrast('#ffffff', hexOf(fill)) >= wcagContrast(hexOf(dark), hexOf(fill)) ? 'white' : dark;
+  const onColor = (fill: Ref): Ref => (contrast('white', fill) >= contrast(dark, fill) ? 'white' : dark);
 
   /** A solid fill with its label color, a hover step, a subtle tint and text for the tint. */
   const role = (name: string, scale: ScaleName, solidStart: number) => {
     const solid = set(name, walk(scale, solidStart, away, (ref) =>
-      wcagContrast(hexOf(ref), hex('surface')) >= UI_MIN && wcagContrast(hexOf(onColor(ref)), hexOf(ref)) >= T,
+      contrast(ref, token('surface').ref) >= UI_MIN && contrast(onColor(ref), ref) >= T,
     ));
     const on = set(`on-${name}`, onColor(solid));
     pairs.push([`on-${name}`, name, 'text'], [name, 'surface', 'ui']);
@@ -139,7 +146,7 @@ export function buildTheme(scales: Scales, theme: Theme, level: Level, fix: bool
     shadows,
     pairs: pairs.map(([fg, bg, kind]) => {
       const required = kind === 'text' ? T : UI_MIN;
-      const ratio = wcagContrast(hex(fg), hex(bg));
+      const ratio = contrast(token(fg).ref, token(bg).ref);
       return { fg, bg, kind, required, ratio, apca: apcaContrast(hex(fg), hex(bg)), pass: ratio >= required };
     }),
   };

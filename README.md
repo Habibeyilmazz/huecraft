@@ -99,7 +99,8 @@ Some decisions worth knowing:
   one step.
 - **Contrast by walking the scale.** Each semantic token has a preferred step. If it misses its target against the
   backgrounds it is used on, huecraft walks toward the dark end (light theme) or the light end (dark theme) until it
-  passes. A unit test checks that every pair passes for 47 brand colors, both themes and both levels.
+  passes. Wide-gamut screens show slightly different colors, so a step only counts as passing if its P3 override
+  passes too. A unit test checks that every pair passes for 47 brand colors, both themes and both levels.
 - **The studio uses its own output.** The page is styled by the same CSS string the Export tab shows. The studio's own
   chrome is deliberately grey, so the only colors on screen are yours.
 - **Vision simulation** uses the Machado, Oliveira and Fernandes (2009) matrices at full severity, applied as an SVG
@@ -107,7 +108,8 @@ Some decisions worth knowing:
 
 ### Limits
 
-- Contrast is computed on the sRGB values. P3 overrides keep the same OKLCH lightness but are not checked separately.
+- Semantic pairs are checked twice, with the sRGB values and with the P3 overrides, and the lower ratio is reported.
+  The step-by-step matrix uses the sRGB values only.
 - APCA values are shown for reference only. Pass and fail are decided by WCAG 2.2 ratios.
 - The Figma export follows the request body of `POST /v1/files/:file_key/variables`. It has not been sent to a live
   Figma file. Shadows and fluid sizes cannot be Figma variables, so they are left out or flattened to desktop sizes.
