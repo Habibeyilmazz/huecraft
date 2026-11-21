@@ -5,6 +5,17 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Performance and accessibility pass (round 16)
+
+Re-measured after the font and shadcn rounds; nothing worth changing, so no code changed.
+
+- Production build, Chromium 1280x800, no throttling: JS 45.7 kB (17.5 kB gzip, was 41.8 kB), CSS 31.0 kB (9.1 kB
+  gzip), 120.7 kB over the wire, first contentful paint 32 ms, "Surprise me" click to next paint 11 ms. CLI start to
+  output 34 ms for `css` and `shadcn`. 44 unit tests, `tsc --noEmit` and all e2e checks (axe in every tab and
+  theme, 24px targets, no sideways scroll at phone width) pass.
+- The shadcn `text-white` destructive button is a limit of shadcn's component, documented in the README with the fix
+  (`text-destructive-foreground`); not a huecraft bug. Not run: Lighthouse again, other browsers.
+
 ### Feature round: shadcn/ui theme (round 15)
 
 Used the studio as someone starting a React app would: the palette is ready, but the most common way to theme a new
