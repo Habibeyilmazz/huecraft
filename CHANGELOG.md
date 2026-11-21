@@ -8,6 +8,24 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Two rounds so far: a design and accessibility pass over the studio (screenshots at 1440, 1280, 1024, 820, 390 and
 320px in both themes, a Tab walk of every panel, Windows contrast themes), and before it an independent first-run
 review (a fresh clone, the README followed to the letter, then a read of the whole codebase).
+A third round was a security pass, below.
+
+### Security pass
+
+- **Fixed: a shared link could freeze the studio.** `?b=rgb(` followed by a few thousand spaces made the color
+  parser backtrack cubically (13 s at 4,000 characters, the CLI too). `parseColor` is linear now; a unit test and an
+  end-to-end check load such inputs against a time limit.
+- **Added a Content Security Policy** (a meta tag, since GitHub Pages sends no headers): only the site's own script
+  runs; inline styles and `data:` fonts are allowed because the studio and Vite's build use them. An end-to-end
+  check confirms an injected `<script>` and an inline `onerror` do not run and that no tab trips the policy. The
+  axe check now runs with the policy bypassed, because axe is injected inline.
+- **Workflows:** every action pinned to a commit SHA (tag in a comment), `persist-credentials: false` on checkout,
+  and two CI steps that fail on an unpinned action or on an `npm audit` advisory of moderate or worse. The Pages
+  build no longer calls `configure-pages`, which needs Pages access the read-only build job does not have. The Pages
+  workflow has still never run.
+- Checked, nothing to change: every `innerHTML` sink takes escaped or fixed text; URL errors are dropped, never
+  shown; the URL's theme, vision and tab values are allow-listed; the CLI only writes to stdout; `npm audit` is
+  clean; no secrets or personal data in the git history (the one email is the synthetic `fernhill.example`).
 
 ### Changed in the design pass
 
