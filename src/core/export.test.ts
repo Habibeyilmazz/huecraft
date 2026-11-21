@@ -2,8 +2,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { exportTokens, FORMATS, isFormat } from './export.ts';
-import { buildTokens, DEFAULT_RECIPE, recipeToParams } from './tokens.ts';
+import { exportTokens, FORMATS, isFormat, type Format } from './export.ts';
+import { buildTokens, DEFAULT_RECIPE, LIMITS, parseRecipe, RATIOS, recipeFromParams, recipeToCommand, recipeToParams } from './tokens.ts';
 
 const tokens = buildTokens({ ...DEFAULT_RECIPE, brand: '#7c3aed' });
 
