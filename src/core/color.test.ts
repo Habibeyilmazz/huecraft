@@ -41,7 +41,8 @@ test('parseColor reads hex, rgb() and oklch(), and rejects everything else', () 
   assert.equal(parseColor('oklch(54.13% 61.65% 293.01)'), '#7c3aed', 'chroma 100% is 0.4');
   assert.equal(parseColor('oklch(0.7 0.37 150)'), oklchToHex({ l: 0.7, c: 0.37, h: 150 }), 'beyond sRGB: chroma is reduced');
   for (const bad of ['', 'red', 'rgb(1 2)', 'rgb(1 2 3 4)', 'rgb(1 2 3 / 0.5)', 'rgb(1 2 3deg)', 'rgb(a b c)', 'hsl(0 0% 0%)',
-    'oklch(0.5 0.1)', 'oklch(0.5 0.1 20%)', 'oklch(0.5 0.1 20) x', 'rgb(1 2 3', 'rgb(<img src=x>)', 'rgb(1e3 0 0)']) {
+    'oklch(0.5 0.1)', 'oklch(0.5 0.1 20%)', 'oklch(0.5 0.1 20) x', 'rgb(1 2 3', 'rgb(<img src=x>)', 'rgb(1e3 0 0)',
+    'oklch(54 0.25 293)', 'oklch(120% 0.1 20)', 'oklch(-0.1 0.1 20)']) {
     assert.equal(parseColor(bad), null, bad);
   }
 });

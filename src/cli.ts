@@ -87,8 +87,11 @@ function main(): void {
     process.stdout.write(USAGE);
     return;
   }
-  if (positionals.length !== 1) fail(positionals.length ? 'expected exactly one color' : 'missing color');
-  if (!isFormat(values.format)) fail(`unknown format "${values.format}" (use ${Object.keys(FORMATS).join(', ')})`);
+  if (positionals.length !== 1) {
+    fail(positionals.length ? 'expected exactly one color' : 'missing color (an unquoted # starts a shell comment: write 7c3aed or quote it)');
+  }
+  const format = values.format.toLowerCase(); // like --level, which takes aaa as well as AAA
+  if (!isFormat(format)) fail(`unknown format "${values.format}" (use ${Object.keys(FORMATS).join(', ')})`);
 
   if (values.fix && values['no-fix']) fail('--fix and --no-fix contradict each other');
   const input = recipeInput(positionals[0]!);
@@ -115,7 +118,7 @@ function main(): void {
   for (const { a, b, degrees } of hueClashes(recipe)) {
     process.stderr.write(`huecraft: note: ${a} and ${b} hues are ${degrees}° apart and may read as one color (--${b}-hue moves ${b})\n`);
   }
-  process.stdout.write(exportTokens(buildTokens(recipe), values.format));
+  process.stdout.write(exportTokens(buildTokens(recipe), format));
 }
 
 main();

@@ -175,6 +175,8 @@ export function parseColor(input: string): string | null {
     : [channel(a, 1), channel(b, 0.4), channel(c, 0, 'deg')];
   if (values.some(Number.isNaN)) return null;
   const [x, y, z] = values as [number, number, number];
+  // CSS clamps lightness, but oklch(54 0.25 293) is a typo for 54%, not a request for white.
+  if (!rgb && (x < 0 || x > 1)) return null;
   return rgb ? rgbToHex([x, y, z]) : oklchToHex({ l: x, c: Math.max(0, y), h: z });
 }
 
