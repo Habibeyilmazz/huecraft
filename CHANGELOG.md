@@ -5,6 +5,24 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Feature round: status hues
+
+- **Added: status hues are part of the recipe.** Four sliders under "Status hues" in the studio, `--success-hue`,
+  `--warning-hue`, `--danger-hue` and `--info-hue` in the CLI, and `hs`, `hw`, `hd`, `hi` in shared links. Links
+  without them keep the old fixed hues (150°, 75°, 25°, 245°). The export header lists only the hues that were moved.
+  Why this one: picking a red, blue or green brand (the most common brand colors) gave a danger, info or success
+  scale that looked like the brand, and there was no way to change it.
+- **Added: hue clash warning** (`hueClashes` in `core/tokens.ts`). A status within 30° of a saturated brand or of
+  another status is named under the sliders and on its palette row; the CLI writes a note to stderr and still exits 0.
+  It warns only; nothing is moved automatically.
+- Unit tests: hues are validated and round-trip, every pair still passes at every hue in 30° steps on five brands
+  and both levels, clashes wrap around 0°, a near-grey brand never clashes, CLI flags and note. One more end-to-end
+  check drives the slider.
+- **Fixed: the brand color field clipped `oklch()` input** (65px wide at desktop). It now has the first line of the
+  group to itself; the picker and "Surprise me" sit under it, in the same order for Tab as on screen.
+- README screenshots refreshed for the new field layout. None of them shows the status sliders, which sit below
+  the fold. The Pages workflow has still never run. Commits from here credit Opus 5.5, as the session's attribution note says.
+
 Two rounds so far: a design and accessibility pass over the studio (screenshots at 1440, 1280, 1024, 820, 390 and
 320px in both themes, a Tab walk of every panel, Windows contrast themes), and before it an independent first-run
 review (a fresh clone, the README followed to the letter, then a read of the whole codebase).

@@ -35,6 +35,10 @@ Run `node dist-cli/cli.js --help` for every option. huecraft is not published to
 - **Color scales.** Brand, neutral, success, warning, danger and info, eleven steps each (50 to 950), built in OKLCH.
   The brand scale keeps your exact color at the step nearest its lightness. Neutrals are tinted toward the brand hue
   by an amount you choose.
+- **Status hues you can move.** Success, warning, danger and info start at 150°, 75°, 25° and 245° (OKLCH). When a
+  status lands within 30° of your brand's hue or of another status (a red brand and danger, a blue brand and info),
+  the studio says so under the sliders and on the palette, and the CLI prints a note on stderr. Drag the hue away
+  and the scale, its semantic tokens and their contrast fixes follow.
 - **sRGB and Display P3.** Every step is gamut-mapped by lowering chroma only, so lightness and hue hold. Where P3 can
   show more chroma than sRGB, the CSS export adds an `oklch()` override inside `@media (color-gamut: p3)`.
 - **Semantic tokens for light and dark themes.** Backgrounds, surfaces, borders, text, a primary role and four status
@@ -85,12 +89,16 @@ huecraft <color> [options]
       --unit <px>    spacing unit, 3..6   (default: 4)
       --radius <n>   corner roundness, 0..2   (default: 1)
       --level <l>    WCAG contrast target, AA | AAA   (default: AA)
+      --success-hue <deg>, --warning-hue <deg>, --danger-hue <deg>, --info-hue <deg>
+                     OKLCH hue of a status scale, 0..360
+                     (defaults: success 150, warning 75, danger 25, info 245)
       --no-fix       keep preferred steps even where they miss the contrast target
 ```
 
 The CSS, Tailwind and SCSS output starts with a comment holding the command that recreates it; the design-tokens
 JSON has it in `$description`. The Figma payload carries no such note, because it is a request body.
-Invalid input exits with code 2 and a message on stderr.
+Invalid input exits with code 2 and a message on stderr. A status hue within 30° of the brand or of another status
+prints a note on stderr and still exits 0, so the output can be redirected as usual.
 
 ## How it works
 
@@ -132,8 +140,8 @@ Some decisions worth knowing:
   Figma file, and Figma offers that endpoint on Enterprise plans only. Shadows and fluid sizes cannot be Figma
   variables, so they are left out or flattened to desktop sizes.
 - In the Tailwind export, shadow utilities keep the light-theme shadows, because Tailwind inlines shadow values.
-- Status hues are fixed (success 150°, warning 75°, danger 25°, info 245°). A brand color close to one of them will
-  look similar to that status.
+- Status hues are not moved for you. huecraft flags a status within 30° of the brand or of another status, but
+  which one to move, and where, is your call. The 30° line is a rule of thumb, not a perceptual measure.
 - Simulated color vision is an approximation and does not replace testing with people.
 
 ## Development
@@ -155,7 +163,6 @@ To publish the studio, enable GitHub Pages for the repository with "GitHub Actio
 ## Roadmap
 
 - A brand color outside sRGB (Display P3 input)
-- Editable status hues, and nudging them away from a clashing brand
 - Per-token overrides in the studio
 - Font family choices and line-height tokens
 - Importing an existing palette
