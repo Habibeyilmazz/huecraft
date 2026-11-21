@@ -19,9 +19,10 @@ const FORMAT_NOTES: Record<Format, string> = {
   json: 'W3C Design Tokens Community Group format (2025.10). Semantic tokens are aliases, and they and the shadows are grouped by theme.',
   figma: 'Request body for the Figma REST API endpoint POST /v1/files/:file_key/variables. Two collections: Primitives, and Semantic with Light and Dark modes.',
   scss: 'Sass maps for each scale, both themes and the type, space and radius scales.',
+  shadcn: 'The :root and .dark blocks of a shadcn/ui globals.css, filled from the contrast-checked semantic tokens. Keep the @theme inline block shadcn init wrote.',
 };
-// Short names for the format switch, so all five fit on one line of a phone. The note under it says the rest.
-const FORMAT_TABS: Record<Format, string> = { css: 'CSS', tailwind: 'Tailwind', json: 'JSON', figma: 'Figma', scss: 'SCSS' };
+// Short names for the format switch, so all six fit on one line of a phone. The note under it says the rest.
+const FORMAT_TABS: Record<Format, string> = { css: 'CSS', tailwind: 'Tailwind', json: 'JSON', figma: 'Figma', scss: 'SCSS', shadcn: 'shadcn' };
 const RATIO_NAMES = ['Minor second', 'Major second', 'Minor third', 'Major third', 'Perfect fourth', 'Augmented fourth', 'Perfect fifth'];
 const PRESETS: [name: string, hex: string][] = [
   ['Petrol', '#0c7c86'], ['Violet', '#7c3aed'], ['Cobalt', '#2456e6'], ['Raspberry', '#c81e5b'],

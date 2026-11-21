@@ -965,6 +965,18 @@ input[type='color']::-moz-color-swatch {
 .export-bar .seg {
   flex-wrap: wrap;
 }
+/* Six formats do not fit one row on a phone: two even rows of three instead of five and a straggler. */
+@media (max-width: 479px) {
+  .export-bar .seg {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    width: 100%;
+  }
+  .export-bar .seg span {
+    flex: 1;
+    justify-content: center;
+  }
+}
 .export-actions {
   display: flex;
   flex-wrap: wrap;

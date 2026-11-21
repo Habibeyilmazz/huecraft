@@ -86,9 +86,9 @@ Run `node dist-cli/cli.js --help` for every option. huecraft is not published to
   only by the CSS variables you export. Light and dark switch instantly.
 - **Color-vision simulation.** View the whole studio as someone with protanopia, deuteranopia, tritanopia or
   achromatopsia would.
-- **Exports.** CSS custom properties, a Tailwind CSS v4 `@theme`, W3C design-tokens JSON, a Figma variables payload
-  and SCSS maps. Copy or download, or copy the CLI command that writes the same file. Shadows are in every format
-  except the Figma payload.
+- **Exports.** CSS custom properties, a Tailwind CSS v4 `@theme`, W3C design-tokens JSON, a Figma variables payload,
+  SCSS maps and a shadcn/ui theme. Copy or download, or copy the CLI command that writes the same file. Shadows are
+  in the CSS, Tailwind, JSON and SCSS output.
 - **Shareable links.** The whole state lives in the URL query string. "Copy link" gives you a link that reopens the
   same palette, theme and tab.
 
@@ -119,7 +119,7 @@ huecraft <studio link> [options]
   <color>            7c3aed, '#7c3aed', 'rgb(124 58 237)' or 'oklch(0.54 0.25 293)'
   <studio link>      a link from the studio's "Copy link", or just its ?query part, in quotes;
                      its recipe is used and any option below overrides it
-  -f, --format <f>   css | tailwind | json | figma | scss   (default: css)
+  -f, --format <f>   css | tailwind | json | figma | scss | shadcn   (default: css)
       --tint <n>     neutral tint toward the brand hue, 0..1   (default: 0.3)
       --ratio <n>    type scale ratio: 1.067, 1.125, 1.2, 1.25, 1.333, 1.414, 1.5   (default: 1.25)
       --base <px>    body text size, 14..20   (default: 16)
@@ -140,7 +140,20 @@ Line heights follow Tailwind v4's naming, `--text-xl--line-height`, in both the 
 Tailwind `text-xl` sets the size and its line height together. The design-tokens JSON has them in a `lineHeight`
 group, SCSS in a `$line-height` map, and the Figma payload as `line-height/*` variables in px.
 
-The CSS, Tailwind and SCSS output starts with a comment holding the command that recreates it; the design-tokens
+### Using it with shadcn/ui
+
+```bash
+npx github:Habibeyilmazz/huecraft 7c3aed --format shadcn
+```
+
+prints the `:root` and `.dark` blocks of a shadcn/ui `globals.css`: `--background`, `--primary`, `--muted`,
+`--destructive`, `--chart-1` to `--chart-5`, the `--sidebar-*` set and `--radius`, as hex. Paste them over the two
+blocks `shadcn init` wrote and keep its `@theme inline` block, which maps them to utilities such as `bg-primary`.
+Every `x` / `x-foreground` pair comes from a pair huecraft checks, so they pass the contrast level you chose. The
+charts take the primary, info, success, warning and danger colors. This was checked by compiling the output with the
+Tailwind v4.1 CLI under shadcn's `@theme inline` mapping, not inside a real shadcn project.
+
+The CSS, Tailwind, SCSS and shadcn output starts with a comment holding the command that recreates it; the design-tokens
 JSON has it in `$description`. The Figma payload carries no such note, because it is a request body.
 A link is read for its recipe only (theme, tab and vision settings are ignored) and must contain a brand color
 (`b=`); fields it leaves out take their defaults, as in the studio. Invalid input exits with code 2 and a message
@@ -159,7 +172,7 @@ Everything that computes tokens lives in `src/core` and has no dependencies. The
 | `core/semantic.ts` | Light and dark semantic tokens, the contrast walk, the list of checked pairs |
 | `core/dimensions.ts` | Fluid type scale, spacing, radius |
 | `core/tokens.ts` | The recipe (validated at the URL and CLI boundaries) and the full token set |
-| `core/export.ts` | The five output formats |
+| `core/export.ts` | The six output formats |
 
 Some decisions worth knowing:
 
@@ -186,6 +199,11 @@ Some decisions worth knowing:
 - The Figma export follows the request body of `POST /v1/files/:file_key/variables`. It has not been sent to a live
   Figma file, and Figma offers that endpoint on Enterprise plans only. Shadows and fluid sizes cannot be Figma
   variables, so they are left out or flattened to desktop sizes.
+- The shadcn/ui theme is plain sRGB hex: it has no wide-gamut overrides, shadows, type or spacing, because shadcn's
+  theme has no variables for them. Use the CSS or Tailwind export next to it if you want those.
+- In the dark theme, and in the light one with a yellowish danger hue, the label that passes on `--destructive` is
+  the dark neutral, so `--destructive-foreground` is dark. shadcn's newer destructive button ignores that variable
+  and sets `text-white`, which can then miss the contrast target; give that button `text-destructive-foreground`.
 - In the Tailwind export, shadow utilities keep the light-theme shadows, because Tailwind inlines shadow values.
 - Status hues are not moved for you. huecraft flags a status within 30° of the brand or of another status, but
   which one to move, and where, is your call. The 30° line is a rule of thumb, not a perceptual measure.
@@ -208,7 +226,7 @@ clear about when another tool is the better pick.
 | A hand-tuned scale for one color, with a large community behind it | [Radix Colors](https://www.radix-ui.com/colors) | Radix scales are designed by hand and battle-tested; huecraft's are computed |
 | Tailwind's own palette and the default `@theme` | [Tailwind CSS](https://tailwindcss.com) | huecraft only helps when you want a palette from your brand color |
 | A color-system editor with team features and Figma plugins | [Leonardo](https://leonardocolor.io), [Material Theme Builder](https://material-foundation.github.io/material-theme-builder/) | huecraft has no accounts, plugin or live Figma sync |
-| Transforming token files into many platforms | [Style Dictionary](https://styledictionary.com) | huecraft writes five formats, not iOS or Android |
+| Transforming token files into many platforms | [Style Dictionary](https://styledictionary.com) | huecraft writes six formats, not iOS or Android |
 | Free-form OKLCH exploration | [oklch.com](https://oklch.com) | huecraft is opinionated: scales, semantic tokens and contrast fixing, not a picker |
 
 Where huecraft fits: you have one brand color and want light and dark semantic tokens that already pass your

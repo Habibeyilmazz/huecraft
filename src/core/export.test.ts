@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { exportTokens, FORMATS, isFormat, type Format } from './export.ts';
+import { wcagContrast } from './color.ts';
 import { buildTokens, DEFAULT_RECIPE, LIMITS, parseRecipe, RATIOS, recipeFromParams, recipeToCommand, recipeToParams } from './tokens.ts';
 
 const tokens = buildTokens({ ...DEFAULT_RECIPE, brand: '#7c3aed' });
@@ -82,6 +83,36 @@ test('SCSS: maps for scales, themes and dimensions', () => {
   assert.match(scss, /\$theme-dark: \(\n {2}'bg': #[0-9a-f]{6}, \/\/ neutral-950/);
   assert.match(scss, /\$space: \(\n {2}'0-5': 0\.125rem,/);
   assert.equal((scss.match(/\(/g) ?? []).length, (scss.match(/\)/g) ?? []).length);
+});
+
+/** The `--name: value` declarations of one block of the shadcn export. */
+const shadcnBlock = (css: string, selector: ':root' | '.dark'): Record<string, string> => Object.fromEntries(
+  [...css.split(`\n${selector} {\n`)[1]!.split('\n}')[0]!.matchAll(/--([\w-]+): ([^;]+);/g)].map((m) => [m[1]!, m[2]!]),
+);
+
+test('shadcn/ui: every variable shadcn reads, in both themes, and every foreground pair passes', () => {
+  const out = exportTokens(tokens, 'shadcn');
+  const light = shadcnBlock(out, ':root');
+  const dark = shadcnBlock(out, '.dark');
+  assert.equal(light.radius, '0.625rem');
+  assert.equal(light.primary, '#7c3aed');
+  assert.equal(Object.keys(light).length, 33);
+  assert.equal(Object.keys(dark).length, 32);
+  for (const name of Object.keys(dark)) assert.match(dark[name]!, /^#[0-9a-f]{6}$/, name);
+  for (const brand of ['#7c3aed', '#f2a900', '#2b2f36', '#00ff00']) {
+    for (const level of ['AA', 'AAA'] as const) {
+      const css = exportTokens(buildTokens({ ...DEFAULT_RECIPE, brand, level }), 'shadcn');
+      for (const selector of [':root', '.dark'] as const) {
+        const vars = shadcnBlock(css, selector);
+        for (const [name, fg] of Object.entries(vars)) {
+          if (!name.endsWith('foreground')) continue;
+          const bg = vars[name === 'foreground' ? 'background' : name.replace(/-foreground$/, '')]!;
+          const ratio = wcagContrast(fg, bg);
+          assert.ok(ratio >= (level === 'AAA' ? 7 : 4.5), `${brand} ${level} ${selector} ${name}: ${ratio.toFixed(2)}`);
+        }
+      }
+    }
+  }
 });
 
 test('every format is non-empty and isFormat guards the names', () => {

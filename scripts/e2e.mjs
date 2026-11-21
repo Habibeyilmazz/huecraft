@@ -291,6 +291,7 @@ try {
       json: /"\$type": "color"/,
       figma: /"variableCollections"/,
       scss: /\$color-brand: \(/,
+      shadcn: /^\.dark \{\n {2}--background: #/m,
       css: /:root \{/,
     };
     for (const [format, pattern] of Object.entries(expectations)) {
