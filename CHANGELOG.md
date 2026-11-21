@@ -5,6 +5,17 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Launch pass (round 14)
+
+- Checked the previous gaps: `npx github:Habibeyilmazz/huecraft 7c3aed --format tailwind` really works from a clean
+  directory; 43 unit tests pass; `shots/` is git-ignored. No code bugs found.
+- **Added: `docs/demo.gif`** at the top of the README, recorded from the real studio by `scripts/demo.mjs`
+  (Playwright frames + ffmpeg), and a real CLI output excerpt in the quickstart.
+- Repo topics extended with `cli`, `css-variables`, `figma`, `apca`.
+- Still open: web fonts and weight tokens; Pages workflow never run, no homepage (owner enables Pages); Figma payload
+  never imported; only Chromium; no social preview image (GitHub only lets the owner upload it in settings).
+- Commits this round carry Sonnet attribution.
+
 ### Feature round: your fonts and line heights (round 12)
 
 Used the studio as a newcomer would: the color side is complete, but the type scale handed out sizes only. Every
