@@ -16,7 +16,8 @@ npm ci
 npm run dev
 ```
 
-Open http://localhost:4140. Change the brand color and everything follows.
+Open http://localhost:4140. Change the brand color and everything follows. The color field takes hex, `rgb()` or
+`oklch()`.
 
 The CLI prints the same tokens to stdout:
 
@@ -26,6 +27,7 @@ npx github:Habibeyilmazz/huecraft 7c3aed --format tailwind  # anywhere; builds f
 ```
 
 Write the color without `#`, or quote it (`'#7c3aed'`), because an unquoted `#` starts a comment in most shells.
+`'rgb(124 58 237)'` and `'oklch(0.54 0.25 293)'` work too, quoted.
 Run `node dist-cli/cli.js --help` for every option. huecraft is not published to npm.
 
 ## What you get
@@ -48,7 +50,7 @@ Run `node dist-cli/cli.js --help` for every option. huecraft is not published to
 - **Color-vision simulation.** View the whole studio as someone with protanopia, deuteranopia, tritanopia or
   achromatopsia would.
 - **Exports.** CSS custom properties, a Tailwind CSS v4 `@theme`, W3C design-tokens JSON, a Figma variables payload
-  and SCSS maps. Copy or download.
+  and SCSS maps. Copy or download. Shadows are in every format except the Figma payload.
 - **Shareable links.** The whole state lives in the URL query string. "Copy link" gives you a link that reopens the
   same palette, theme and tab.
 
@@ -65,6 +67,7 @@ Run `node dist-cli/cli.js --help` for every option. huecraft is not published to
 ```text
 huecraft <color> [options]
 
+  <color>            7c3aed, '#7c3aed', 'rgb(124 58 237)' or 'oklch(0.54 0.25 293)'
   -f, --format <f>   css | tailwind | json | figma | scss   (default: css)
       --tint <n>     neutral tint toward the brand hue, 0..1   (default: 0.3)
       --ratio <n>    type scale ratio: 1.067, 1.125, 1.2, 1.25, 1.333, 1.414, 1.5   (default: 1.25)
@@ -75,7 +78,8 @@ huecraft <color> [options]
       --no-fix       keep preferred steps even where they miss the contrast target
 ```
 
-Every export starts with a comment holding the command that recreates it.
+The CSS, Tailwind and SCSS output starts with a comment holding the command that recreates it; the design-tokens
+JSON has it in `$description`. The Figma payload carries no such note, because it is a request body.
 Invalid input exits with code 2 and a message on stderr.
 
 ## How it works
@@ -111,8 +115,12 @@ Some decisions worth knowing:
 - Semantic pairs are checked twice, with the sRGB values and with the P3 overrides, and the lower ratio is reported.
   The step-by-step matrix uses the sRGB values only.
 - APCA values are shown for reference only. Pass and fail are decided by WCAG 2.2 ratios.
+- The brand color is stored as sRGB hex. An `oklch()` color that sRGB cannot show loses chroma until it fits; the
+  readout under the color field shows what you ended up with. Display P3 is used for the generated steps, not for
+  the brand color itself.
 - The Figma export follows the request body of `POST /v1/files/:file_key/variables`. It has not been sent to a live
-  Figma file. Shadows and fluid sizes cannot be Figma variables, so they are left out or flattened to desktop sizes.
+  Figma file, and Figma offers that endpoint on Enterprise plans only. Shadows and fluid sizes cannot be Figma
+  variables, so they are left out or flattened to desktop sizes.
 - In the Tailwind export, shadow utilities keep the light-theme shadows, because Tailwind inlines shadow values.
 - Status hues are fixed (success 150°, warning 75°, danger 25°, info 245°). A brand color close to one of them will
   look similar to that status.
@@ -136,7 +144,7 @@ To publish the studio, enable GitHub Pages for the repository with "GitHub Actio
 
 ## Roadmap
 
-- Brand input in `oklch()` and Display P3, not just hex
+- A brand color outside sRGB (Display P3 input)
 - Editable status hues, and nudging them away from a clashing brand
 - Per-token overrides in the studio
 - Font family choices and line-height tokens

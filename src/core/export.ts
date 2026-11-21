@@ -135,6 +135,7 @@ const dtcgColor = (hex: string) => ({
 });
 const dtcgAlias = (ref: Ref) => `{color.${ref === 'white' ? 'white' : `${ref.scale}.${ref.step}`}}`;
 const dtcgDimension = (px: number) => ({ $value: { value: round(px / 16), unit: 'rem' } });
+const dtcgPx = (value: number) => ({ value, unit: 'px' });
 
 function json(t: TokenSet): string {
   const group = <T>(items: T[], key: (item: T) => string, value: (item: T) => unknown) =>
@@ -167,8 +168,20 @@ function json(t: TokenSet): string {
     space: { $type: 'dimension', ...group(t.space, (s) => s.name, (s) => dtcgDimension(s.px)) },
     radius: {
       $type: 'dimension',
-      ...group(t.radius, (r) => r.name, (r) => (r.name === 'full' ? { $value: { value: 9999, unit: 'px' } } : dtcgDimension(r.px))),
+      ...group(t.radius, (r) => r.name, (r) => (r.name === 'full' ? { $value: dtcgPx(9999) } : dtcgDimension(r.px))),
     },
+    shadow: group(['light', 'dark'] as const, (name) => name, (name) => ({
+      $type: 'shadow',
+      ...group(t.themes[name].shadows, (s) => s.name, (s) => ({
+        $value: s.layers.map((l) => ({
+          color: { ...dtcgColor(l.color).$value, alpha: l.alpha },
+          offsetX: dtcgPx(0),
+          offsetY: dtcgPx(l.y),
+          blur: dtcgPx(l.blur),
+          spread: dtcgPx(0),
+        })),
+      })),
+    })),
   };
   return JSON.stringify(doc, null, 2) + '\n';
 }

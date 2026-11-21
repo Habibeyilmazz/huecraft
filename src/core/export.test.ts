@@ -38,6 +38,17 @@ test('design tokens JSON: DTCG types, color objects, and aliases that resolve', 
   assert.deepEqual(doc.space['4'].$value, { value: 1, unit: 'rem' });
   assert.match(doc.fontSize.xl.$extensions['huecraft.fluid'], /^clamp\(/);
   assert.deepEqual(doc.fontFamily.sans.$value.slice(0, 2), ['system-ui', '-apple-system']);
+  // Shadows carry the same layers as the CSS export: 0 2px 4px ..., 0 6px 12px rgb(0 0 0 / 0.28).
+  assert.equal(doc.shadow.dark.$type, 'shadow');
+  assert.deepEqual(doc.shadow.dark.md.$value[1], {
+    color: { colorSpace: 'srgb', components: [0, 0, 0], hex: '#000000', alpha: 0.28 },
+    offsetX: { value: 0, unit: 'px' },
+    offsetY: { value: 6, unit: 'px' },
+    blur: { value: 12, unit: 'px' },
+    spread: { value: 0, unit: 'px' },
+  });
+  assert.match(exportTokens(tokens, 'css'), /--shadow-md: 0 2px 4px rgb\(0 0 0 \/ 0\.21\), 0 6px 12px rgb\(0 0 0 \/ 0\.28\);/);
+  assert.equal(doc.shadow.light.xl.$value.length, 2);
   for (const theme of ['light', 'dark']) {
     for (const [name, tok] of Object.entries<{ $value: string }>(doc.semantic[theme])) {
       if (name.startsWith('$')) continue;

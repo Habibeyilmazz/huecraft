@@ -16,7 +16,7 @@ type Tab = (typeof TABS)[number];
 const FORMAT_NOTES: Record<Format, string> = {
   css: 'Custom properties on :root, a dark theme for [data-theme="dark"] and the system setting, and wide-gamut overrides.',
   tailwind: 'A Tailwind CSS v4 theme. Colors become utilities such as bg-primary, text-text-muted and bg-brand-600.',
-  json: 'W3C Design Tokens Community Group format (2025.10). Semantic tokens are aliases, grouped by theme.',
+  json: 'W3C Design Tokens Community Group format (2025.10). Semantic tokens are aliases, and they and the shadows are grouped by theme.',
   figma: 'Request body for the Figma REST API endpoint POST /v1/files/:file_key/variables. Two collections: Primitives, and Semantic with Light and Dark modes.',
   scss: 'Sass maps for each scale, both themes and the type, space and radius scales.',
 };

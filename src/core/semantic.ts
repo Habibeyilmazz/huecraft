@@ -26,11 +26,20 @@ export interface PairCheck {
   apca: number;
   pass: boolean;
 }
+export interface ShadowLayer {
+  /** Vertical offset and blur radius, px. */
+  y: number;
+  blur: number;
+  /** `#rrggbb`, drawn at `alpha`. */
+  color: string;
+  alpha: number;
+}
 export interface ThemeTokens {
   theme: Theme;
   tokens: SemanticToken[];
   pairs: PairCheck[];
-  shadows: { name: string; value: string }[];
+  /** `value` is the CSS box-shadow built from `layers`. */
+  shadows: { name: string; layers: ShadowLayer[]; value: string }[];
 }
 
 const STATUSES = ['success', 'warning', 'danger', 'info'] as const;
@@ -128,16 +137,21 @@ export function buildTheme(scales: Scales, theme: Theme, level: Level, fix: bool
   );
   for (const status of STATUSES) role(status, status, light ? 6 : 5);
 
-  const shadowRgb = light ? rgbTriplet(hexOf(dark)) : '0 0 0';
+  const shadowColor = light ? hexOf(dark) : '#000000';
   const k = light ? 1 : 3.5;
-  const layer = (y: number, blur: number, alpha: number) =>
-    `0 ${y}px ${blur}px rgb(${shadowRgb} / ${Math.round(alpha * k * 100) / 100})`;
+  const layer = (y: number, blur: number, alpha: number): ShadowLayer =>
+    ({ y, blur, color: shadowColor, alpha: Math.round(alpha * k * 100) / 100 });
+  const shadow = (name: string, ...layers: ShadowLayer[]) => ({
+    name,
+    layers,
+    value: layers.map((l) => `0 ${l.y}px ${l.blur}px rgb(${rgbTriplet(l.color)} / ${l.alpha})`).join(', '),
+  });
   const shadows = [
-    { name: 'xs', value: layer(1, 2, 0.06) },
-    { name: 'sm', value: `${layer(1, 2, 0.06)}, ${layer(2, 4, 0.06)}` },
-    { name: 'md', value: `${layer(2, 4, 0.06)}, ${layer(6, 12, 0.08)}` },
-    { name: 'lg', value: `${layer(4, 8, 0.06)}, ${layer(16, 32, 0.1)}` },
-    { name: 'xl', value: `${layer(8, 16, 0.08)}, ${layer(32, 64, 0.12)}` },
+    shadow('xs', layer(1, 2, 0.06)),
+    shadow('sm', layer(1, 2, 0.06), layer(2, 4, 0.06)),
+    shadow('md', layer(2, 4, 0.06), layer(6, 12, 0.08)),
+    shadow('lg', layer(4, 8, 0.06), layer(16, 32, 0.1)),
+    shadow('xl', layer(8, 16, 0.08), layer(32, 64, 0.12)),
   ];
 
   return {
