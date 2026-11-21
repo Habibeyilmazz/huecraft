@@ -5,8 +5,30 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
-Changes from an independent first-run review: a fresh clone, the README followed to the letter, then a read of the
-whole codebase.
+Two rounds so far: a design and accessibility pass over the studio (screenshots at 1440, 1280, 1024, 820, 390 and
+320px in both themes, a Tab walk of every panel, Windows contrast themes), and before it an independent first-run
+review (a fresh clone, the README followed to the letter, then a read of the whole codebase).
+
+### Changed in the design pass
+
+- **Tables stack by the room they have.** The token table and the contrast table turn each row into a small grid
+  when their region is too narrow, using container queries. Before, the contrast table scrolled sideways and cut
+  its suggestions off on any screen under about 1400px, because the recipe rail takes 316px.
+- **Phone layout.** Two-row top bar, a format switch that fits one line, the selected tab scrolled into view, the
+  Apply button under the verdict, and a preview table that drops two columns instead of hiding Status off screen.
+- **Tabs are sticky**, so a long panel does not have to be scrolled back up to switch view.
+- **Keyboard.** Each color scale is one Tab stop with arrow keys, Home and End along its swatches (66 stops became
+  6). A table region is a Tab stop only while it has something to scroll.
+- **Windows contrast themes** (`forced-colors`) keep the swatches, samples and preview, and show which option of a
+  switch is selected. Before, every swatch was blank there.
+- Contrast: moved tokens are rows with a swatch for the old and the new step; the matrix keeps its row labels
+  while it scrolls sideways.
+- Smaller things: the rule beside the rail reaches the footer; the preview dashboard has no blank band under its
+  table; radius tiles sit four and three; the dark theme says why its shadows are faint; the color error has an
+  icon, plainer words and `role="alert"`; a `noscript` message; comments set back in the export; the license line
+  moved to a footer.
+- README screenshots refreshed from the running build, with two phone screenshots added
+  (`npm run e2e -- --shots`).
 
 ### Added
 
@@ -62,3 +84,8 @@ First release.
 - Status hues are fixed and the brand color is sRGB only. Both are design limits listed in the README, not bugs.
 - GitHub Pages is not enabled. The Pages workflow is manual only.
 - Ports: dev server 4140, preview 4141, e2e 4142.
+- Layout rules that depend on width belong in the container queries in `chrome.css` ("Tables in a narrow
+  workspace") when they concern the workspace, because the rail changes how much room it has. The media queries
+  are for the page frame only.
+- Not checked in the design pass: a real screen reader, a real phone, Firefox and Safari. Everything was looked at
+  in headless Chromium.

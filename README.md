@@ -62,6 +62,16 @@ Run `node dist-cli/cli.js --help` for every option. huecraft is not published to
 | --- | --- |
 | ![Contrast table listing failing pairs and suggested steps](docs/screenshots/contrast.png) | ![Palette as seen with deuteranopia](docs/screenshots/vision.png) |
 
+The studio works on a phone and without a mouse. Where a table has no room for its columns, each row turns into a
+small stacked block instead of scrolling sideways. Tab reaches each color scale once, and the arrow keys, Home and
+End move along its swatches. Motion is cut for people who ask for less of it, and Windows contrast themes keep the
+swatches and the selected states. An axe audit of every tab in both themes runs in CI.
+
+<p>
+  <img src="docs/screenshots/phone-palette.png" width="270" alt="The studio on a phone: brand color controls, then the tabs and the first color scale" />
+  <img src="docs/screenshots/phone-contrast.png" width="270" alt="The contrast check on a phone in the dark theme, one stacked row per color pair" />
+</p>
+
 ## CLI
 
 ```text

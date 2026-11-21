@@ -277,9 +277,12 @@ try {
       ['preview-dark', '?b=7c3aed&th=dark&tab=preview', true],
       ['contrast', '?b=fde047&lv=AAA&fx=0&th=light&tab=contrast', false],
       ['vision', '?b=c81e5b&th=light&cv=deuteranopia', false],
+      ['phone-palette', '?b=0c7c86&th=light', false, { width: 390, height: 844 }],
+      ['phone-contrast', '?b=0c7c86&th=dark&tab=contrast', false, { width: 390, height: 844 }, '#tabs'],
     ];
-    for (const [name, query, fullPage] of shots) {
-      const { page, close } = await open(query, { width: 1440, height: 900 }, { deviceScaleFactor: 2 });
+    for (const [name, query, fullPage, viewport = { width: 1440, height: 900 }, anchor] of shots) {
+      const { page, close } = await open(query, viewport, { deviceScaleFactor: 2 });
+      if (anchor) await page.locator(anchor).evaluate((e) => scrollTo(0, e.getBoundingClientRect().top + scrollY));
       await page.waitForTimeout(200);
       await page.screenshot({ path: `docs/screenshots/${name}.png`, fullPage });
       await close();
