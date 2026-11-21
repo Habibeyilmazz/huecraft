@@ -8,18 +8,20 @@ import {
   buildTokens, DEFAULT_RECIPE, LIMITS, RATIOS, recipeFromParams, recipeToParams, type Recipe, type TokenSet,
 } from '../core/tokens.ts';
 import { PREVIEW_HTML } from './preview.ts';
-import { renderContrast, renderPalette, renderScale } from './views.ts';
+import { renderCode, renderContrast, renderPalette, renderScale } from './views.ts';
 
 const TABS = ['palette', 'preview', 'contrast', 'scale', 'export'] as const;
 type Tab = (typeof TABS)[number];
 
 const FORMAT_NOTES: Record<Format, string> = {
   css: 'Custom properties on :root, a dark theme for [data-theme="dark"] and the system setting, and wide-gamut overrides.',
-  tailwind: 'A Tailwind CSS v4 theme. Colors become utilities such as bg-primary, text-text-muted and bg-brand-600.',
+  tailwind: 'An @theme block for your stylesheet. Colors become utilities such as bg-primary, text-text-muted and bg-brand-600.',
   json: 'W3C Design Tokens Community Group format (2025.10). Semantic tokens are aliases, and they and the shadows are grouped by theme.',
   figma: 'Request body for the Figma REST API endpoint POST /v1/files/:file_key/variables. Two collections: Primitives, and Semantic with Light and Dark modes.',
   scss: 'Sass maps for each scale, both themes and the type, space and radius scales.',
 };
+// Short names for the format switch, so all five fit on one line of a phone. The note under it says the rest.
+const FORMAT_TABS: Record<Format, string> = { css: 'CSS', tailwind: 'Tailwind', json: 'JSON', figma: 'Figma', scss: 'SCSS' };
 const RATIO_NAMES = ['Minor second', 'Major second', 'Minor third', 'Major third', 'Perfect fourth', 'Augmented fourth', 'Perfect fifth'];
 const PRESETS: [name: string, hex: string][] = [
   ['Petrol', '#0c7c86'], ['Violet', '#7c3aed'], ['Cobalt', '#2456e6'], ['Raspberry', '#c81e5b'],
@@ -93,8 +95,8 @@ for (const key of ['tint', 'base', 'unit', 'radius'] as const) {
 $('ratio').innerHTML = RATIOS.map((r, i) => `<option value="${r}">${r} ${RATIO_NAMES[i]}</option>`).join('');
 $('presets').innerHTML = PRESETS.map(([name, hex]) =>
   `<button type="button" class="preset" data-hex="${hex}" style="background:${hex}" aria-label="${name}, ${hex}" title="${name}"></button>`).join('');
-$('formats').insertAdjacentHTML('beforeend', Object.entries(FORMATS).map(([id, f]) =>
-  `<label><input type="radio" name="format" value="${id}" /><span>${f.label}</span></label>`).join(''));
+$('formats').insertAdjacentHTML('beforeend', Object.entries(FORMAT_TABS).map(([id, label]) =>
+  `<label><input type="radio" name="format" value="${id}" /><span>${label}</span></label>`).join(''));
 for (const id of ['matrix-fg', 'matrix-bg']) {
   $(id).innerHTML = SCALE_NAMES.map((n) => `<option value="${n}">${n[0]!.toUpperCase() + n.slice(1)}</option>`).join('');
 }
@@ -178,8 +180,8 @@ function render(): void {
   renderPalette(tokens);
   renderContrast(tokens, state.theme, state.matrix);
   renderScale(tokens);
-  $('code').textContent = exportTokens(tokens, state.format);
-  $('format-note').textContent = FORMAT_NOTES[state.format];
+  renderCode(exportTokens(tokens, state.format), state.format !== 'json' && state.format !== 'figma');
+  $('format-note').innerHTML = `<strong>${FORMATS[state.format].label}.</strong> ${FORMAT_NOTES[state.format]}`;
 
   const bars = [200, 400, 600, 800, 950].map((step, i) => {
     const hex = brand.swatches.find((s) => s.step === step)!.hex;
@@ -265,9 +267,15 @@ $('share').addEventListener('click', () => {
 });
 
 const tabs = TABS.map((tab) => $(`tab-${tab}`));
+/** On a phone the tab strip scrolls sideways; centre the selected tab so its neighbours show. */
+function revealTab(): void {
+  const tab = $(`tab-${state.tab}`);
+  $('tabs').scrollLeft = tab.offsetLeft - ($('tabs').clientWidth - tab.offsetWidth) / 2;
+}
 function selectTab(tab: Tab, focus = false): void {
   state.tab = tab;
   render();
+  revealTab();
   history.replaceState(null, '', stateUrl());
   if (focus) $(`tab-${tab}`).focus();
 }
@@ -281,6 +289,19 @@ tabs.forEach((button, i) => {
   });
 });
 
+// Each scale is one tab stop; the arrow keys move along its swatches.
+$('scales').addEventListener('keydown', (e) => {
+  const chip = (e.target as HTMLElement).closest<HTMLElement>('.chip');
+  if (!chip) return;
+  const chips = [...chip.parentElement!.querySelectorAll<HTMLElement>('.chip')];
+  const i = chips.indexOf(chip);
+  const next = chips[{ ArrowRight: i + 1, ArrowLeft: i - 1, Home: 0, End: chips.length - 1 }[e.key] ?? -1];
+  if (!next) return;
+  e.preventDefault();
+  chip.tabIndex = -1;
+  next.tabIndex = 0;
+  next.focus();
+});
 $('scales').addEventListener('click', (e) => {
   const hex = (e.target as HTMLElement).closest<HTMLElement>('[data-copy]')?.dataset.copy;
   if (hex) void copy(hex, `Copied ${hex}`);
@@ -317,6 +338,8 @@ $('download-code').addEventListener('click', () => {
 window.addEventListener('popstate', () => {
   Object.assign(state, readUrl());
   render();
+  revealTab();
 });
 
 render();
+revealTab();

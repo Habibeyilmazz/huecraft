@@ -322,11 +322,15 @@ input[type='color']::-moz-color-swatch {
   border: 0;
 }
 .field-error {
+  display: flex;
+  gap: 8px;
   margin-top: 8px;
   font-weight: 600;
+  line-height: 1.35;
 }
-.field-error::before {
-  content: '! ';
+.field-error svg {
+  flex: none;
+  margin-top: 1px;
 }
 .readout {
   margin-top: 8px;
@@ -394,7 +398,14 @@ input[type='color']::-moz-color-swatch {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: 12px;
+}
+.select-row label {
+  white-space: nowrap;
+}
+.select-row select {
+  flex: 1;
+  min-width: 0; /* the longest option would otherwise push the label onto two lines */
 }
 .check {
   display: flex;
@@ -415,9 +426,24 @@ input[type='color']::-moz-color-swatch {
   display: none;
 }
 .colophon {
-  margin-top: 22px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 6px 24px;
+  padding: 18px var(--gutter) 22px;
+  border-top: 1px solid var(--c-rule);
   color: var(--c-muted);
   font-size: 0.875rem;
+}
+.noscript {
+  margin: var(--gutter);
+  padding: 14px 16px;
+  border: 2px solid var(--c-ink);
+  border-radius: 8px;
+  font-weight: 550;
+}
+.quiet {
+  color: var(--c-muted);
 }
 
 /* ---- Workspace ---- */
@@ -429,6 +455,7 @@ input[type='color']::-moz-color-swatch {
   outline: none;
 }
 .tabs {
+  position: relative; /* offsetParent of the tabs, for revealTab() in main.ts */
   display: flex;
   gap: 4px;
   margin: 0 calc(var(--gutter) * -1);
@@ -534,10 +561,10 @@ input[type='color']::-moz-color-swatch {
   cursor: pointer;
   transition: transform 0.14s ease;
 }
-.strip li:first-child .chip {
+.strip .chip:first-child {
   border-radius: 6px 0 0 6px;
 }
-.strip li:last-child .chip {
+.strip .chip:last-child {
   border-radius: 0 6px 6px 0;
 }
 .chip:hover,
@@ -693,6 +720,11 @@ input[type='color']::-moz-color-swatch {
   max-width: 76ch;
   color: var(--c-muted);
 }
+.verdict .verdict-counts {
+  color: var(--c-ink);
+  font-size: 1.0625rem;
+  font-weight: 550;
+}
 .moves {
   margin-top: 26px;
 }
@@ -799,6 +831,10 @@ input[type='color']::-moz-color-swatch {
 .code code {
   font: inherit;
 }
+#format-note strong {
+  color: var(--c-ink);
+  font-weight: 600;
+}
 
 /* ---- Toast ---- */
 .toast {
@@ -822,6 +858,12 @@ input[type='color']::-moz-color-swatch {
 }
 
 /* ---- Small screens ---- */
+@media (max-width: 1100px) {
+  /* The tagline goes before the tools have to wrap under the wordmark. */
+  .bar-line {
+    display: none;
+  }
+}
 @media (max-width: 960px) {
   :root {
     --gutter: 16px;
@@ -835,9 +877,6 @@ input[type='color']::-moz-color-swatch {
     padding: 20px var(--gutter) 4px;
     border-right: 0;
     border-bottom: 1px solid var(--c-rule);
-  }
-  .bar-line {
-    display: none;
   }
   .more > summary {
     display: flex;
@@ -859,9 +898,6 @@ input[type='color']::-moz-color-swatch {
   .more > summary::-webkit-details-marker {
     display: none;
   }
-  .colophon {
-    margin: 16px 0;
-  }
   .scale {
     grid-template-columns: minmax(0, 1fr);
     gap: 10px;
@@ -874,9 +910,105 @@ input[type='color']::-moz-color-swatch {
   }
 }
 @media (max-width: 720px) {
+  /* Two rows: wordmark and theme, then vision and the link button. */
+  .bar {
+    gap: 10px;
+  }
   .bar-tools {
-    margin-left: 0;
-    width: 100%;
+    display: contents;
+  }
+  .wordmark {
+    flex: 1 0 auto;
+  }
+  .bar .inline-field {
+    flex: 1 1 60%;
+    min-width: 0;
+  }
+  .bar .inline-field select {
+    flex: 1;
+    min-width: 0;
+  }
+  .tabs [role='tab'] {
+    font-size: 1rem;
+  }
+
+  /* Tables with too many columns for a phone: each row becomes a small grid, so the
+     result of a contrast check and both themes of a token are on screen without scrolling. */
+  .data.stacks,
+  .data.stacks thead,
+  .data.stacks tbody {
+    display: block;
+  }
+  .data.stacks tr {
+    display: grid;
+    align-items: center;
+    gap: 3px 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--c-rule);
+  }
+  .data.stacks th,
+  .data.stacks td {
+    padding: 0;
+    border: 0;
+    white-space: normal;
+  }
+  #semantic-table tr {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  #semantic-table th:first-child {
+    grid-column: 1 / -1;
+  }
+  #semantic-table thead th:first-child {
+    display: none; /* "Token" says nothing the names below do not */
+  }
+  /* The dot stays beside the first line; a hex value that does not fit wraps under the step name. */
+  #semantic-table td {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  #semantic-table .dot {
+    flex: none;
+    margin: 1px 0 0;
+  }
+  #pairs-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  #pairs-table tr {
+    grid-template-columns: 58px auto auto minmax(0, 1fr) auto;
+  }
+  #pairs-table .c-sample {
+    grid-row: 1 / span 2;
+    align-self: start;
+  }
+  #pairs-table .c-pair {
+    grid-column: 2 / 5;
+  }
+  #pairs-table .c-result {
+    grid-area: 1 / 5;
+    align-self: start;
+  }
+  #pairs-table .c-ratio {
+    grid-area: 2 / 2;
+  }
+  #pairs-table .c-needs {
+    grid-area: 2 / 3;
+  }
+  #pairs-table .c-needs::before {
+    content: 'needs ';
+  }
+  #pairs-table .c-apca {
+    grid-area: 2 / 4 / auto / -1;
+  }
+  #pairs-table .c-hint {
+    grid-area: 3 / 2 / auto / -1;
+  }
+  #pairs-table .c-hint:empty {
+    display: none;
   }
   .btn,
   select,

@@ -15,6 +15,10 @@ const inkOn = (hex: string) => (wcagContrast('#000000', hex) >= wcagContrast('#f
 const fmtRatio = (ratio: number) => (Math.floor(ratio * 100) / 100).toFixed(2); // floor: never round a 4.496 up to a pass
 const px = (v: number) => `${Math.round(v * 10) / 10}px`;
 
+// The two data tables become stacked grids on phones (chrome.css). Explicit roles keep
+// them tables for screen readers in browsers that drop the semantics with the layout.
+const headCell = (label: string) => `<th scope="col" role="columnheader">${label}</th>`;
+
 // ---- Palette ----------------------------------------------------------------
 
 function scaleNote(scale: Scale, tokens: TokenSet): string {
@@ -31,25 +35,25 @@ export function renderPalette(tokens: TokenSet): void {
     const scale = tokens.scales[name];
     const chips = scale.swatches.map((s, i) => {
       const anchor = i === scale.anchor;
-      return `<li><button type="button" class="chip${anchor ? ' is-anchor' : ''}" data-copy="${s.hex}"
+      return `<button type="button" class="chip${anchor ? ' is-anchor' : ''}" data-copy="${s.hex}" tabindex="${i ? -1 : 0}"
         style="background:var(--color-${name}-${s.step});color:${inkOn(s.hex)}">
         <span class="chip-step"><span class="visually-hidden">Copy ${name} </span>${s.step}</span>
         ${s.p3 ? '<span class="chip-tag" title="Wide-gamut screens get a more saturated version of this step">P3</span>' : ''}
         <span class="chip-hex">${s.hex}${anchor ? '<span class="visually-hidden">, your brand color</span>' : ''}</span>
-      </button></li>`;
+      </button>`;
     });
     return `<section class="scale" aria-labelledby="scale-${name}">
       <div class="scale-head"><h3 id="scale-${name}">${title(name)}</h3><p>${scaleNote(scale, tokens)}</p></div>
-      <div class="strip-box"><ol class="strip">${chips.join('')}</ol></div>
+      <div class="strip-box"><div class="strip" role="toolbar" aria-label="${title(name)} steps">${chips.join('')}</div></div>
     </section>`;
   }).join('');
 
   const cell = (tok: SemanticToken) =>
-    `<td><span class="dot" style="background:${tok.hex}"></span>${refLabel(tok.ref)} <span class="num quiet">${tok.hex}</span></td>`;
+    `<td role="cell"><span class="dot" style="background:${tok.hex}"></span><span>${refLabel(tok.ref)} <span class="num quiet">${tok.hex}</span></span></td>`;
   el('semantic-table').innerHTML = `
-    <thead><tr><th scope="col">Token</th><th scope="col">Light theme</th><th scope="col">Dark theme</th></tr></thead>
-    <tbody>${tokens.themes.light.tokens.map((tok, i) =>
-      `<tr><th scope="row" class="num">--color-${tok.name}</th>${cell(tok)}${cell(tokens.themes.dark.tokens[i]!)}</tr>`).join('')}
+    <thead role="rowgroup"><tr role="row">${['Token', 'Light theme', 'Dark theme'].map(headCell).join('')}</tr></thead>
+    <tbody role="rowgroup">${tokens.themes.light.tokens.map((tok, i) =>
+      `<tr role="row"><th scope="row" role="rowheader" class="num">--color-${tok.name}</th>${cell(tok)}${cell(tokens.themes.dark.tokens[i]!)}</tr>`).join('')}
     </tbody>`;
 }
 
@@ -80,10 +84,10 @@ export function renderContrast(tokens: TokenSet, theme: Theme, matrix: { fg: Sca
   el('verdict').innerHTML = `
     <h3>${failing ? `${failing} color ${failing === 1 ? 'pair misses' : 'pairs miss'} ${recipe.level}` : `Every color pair meets ${recipe.level}`}</h3>
     ${!recipe.fix && moves.length ? '<button type="button" class="btn btn-solid" data-action="apply-fixes">Apply the suggested fixes</button>' : ''}
-    <p>Light theme: ${count('light')}. Dark theme: ${count('dark')}. Text needs ${textMin(recipe.level)} to 1, and fills,
-    borders and focus rings need 3 to 1 (WCAG 2.2). Each ratio is the lower of how the pair renders in sRGB and on a
-    Display P3 screen. The table shows the ${theme} theme; switch themes in the top bar. APCA values are for reference
-    and do not affect the result.</p>`;
+    <p class="verdict-counts">Light theme: ${count('light')}. Dark theme: ${count('dark')}.</p>
+    <p>Text needs ${textMin(recipe.level)} to 1, and fills, borders and focus rings need 3 to 1 (WCAG 2.2). Each ratio
+    is the lower of how the pair renders in sRGB and on a Display P3 screen. The table shows the ${theme} theme; switch
+    themes in the top bar. APCA values are for reference and do not affect the result.</p>`;
 
   const suggestion = (pair: PairCheck): string => {
     if (pair.pass) return '';
@@ -92,20 +96,20 @@ export function renderContrast(tokens: TokenSet, theme: Theme, matrix: { fg: Sca
     return fixes.map((m) => `Use ${refLabel(m.to)} for ${m.token}`).join(', ') + '.';
   };
   el('pairs-table').innerHTML = `
-    <thead><tr><th scope="col">Sample</th><th scope="col">Pair</th><th scope="col">WCAG ratio</th><th scope="col">Needs</th><th scope="col">APCA</th><th scope="col">Result</th><th scope="col"><span class="visually-hidden">Suggestion</span></th></tr></thead>
-    <tbody>${current.pairs.map((pair) => {
+    <thead role="rowgroup"><tr role="row">${['Sample', 'Pair', 'WCAG ratio', 'Needs', 'APCA', 'Result', '<span class="visually-hidden">Suggestion</span>'].map(headCell).join('')}</tr></thead>
+    <tbody role="rowgroup">${current.pairs.map((pair) => {
       const sample = pair.kind === 'text'
         ? `<span class="sample" style="background:${hex(pair.bg)};color:${hex(pair.fg)}" aria-hidden="true">Aa</span>`
         : `<span class="sample" style="background:${hex(pair.bg)}" aria-hidden="true"><i class="sample-ui" style="border-color:${hex(pair.fg)}"></i></span>`;
       const lc = Math.round(Math.abs(pair.apca));
-      return `<tr>
-        <td>${sample}</td>
-        <th scope="row">${pair.fg} <span class="quiet">on</span> ${pair.bg}</th>
-        <td class="num">${fmtRatio(pair.ratio)}</td>
-        <td class="num quiet">${pair.required}</td>
-        <td><span class="num">Lc ${lc}</span> <span class="quiet">${pair.kind === 'text' ? apcaWords(lc) : ''}</span></td>
-        <td>${pair.pass ? `<span class="result">${CHECK} Pass</span>` : `<span class="result result-fail">${CROSS} Fails</span>`}</td>
-        <td class="quiet">${suggestion(pair)}</td>
+      return `<tr role="row">
+        <td role="cell" class="c-sample">${sample}</td>
+        <th scope="row" role="rowheader" class="c-pair">${pair.fg} <span class="quiet">on</span> ${pair.bg}</th>
+        <td role="cell" class="c-ratio num">${fmtRatio(pair.ratio)}</td>
+        <td role="cell" class="c-needs num quiet">${pair.required}</td>
+        <td role="cell" class="c-apca"><span class="num">Lc ${lc}</span> <span class="quiet">${pair.kind === 'text' ? apcaWords(lc) : ''}</span></td>
+        <td role="cell" class="c-result">${pair.pass ? `<span class="result">${CHECK} Pass</span>` : `<span class="result result-fail">${CROSS} Fails</span>`}</td>
+        <td role="cell" class="c-hint quiet">${suggestion(pair)}</td>
       </tr>`;
     }).join('')}</tbody>`;
 
@@ -158,4 +162,12 @@ export function renderScale(tokens: TokenSet): void {
         <section class="pv-card spec-shadow" aria-labelledby="spec-shadow"><h3 id="spec-shadow">Shadows <code>--shadow-*</code></h3><ol class="spec-tiles">${shadow}</ol></section>
       </div>
     </div>`;
+}
+
+// ---- Export -------------------------------------------------------------------
+
+/** Shows the exported text, with comments set back so the declarations read first. */
+export function renderCode(code: string, hasComments: boolean): void {
+  const html = esc(code);
+  el('code').innerHTML = hasComments ? html.replace(/\/\*[\s\S]*?\*\/|^\s*\/\/.*$/gm, '<span class="quiet">$&</span>') : html;
 }
