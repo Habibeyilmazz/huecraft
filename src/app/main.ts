@@ -206,6 +206,8 @@ function change(patch: Partial<Recipe>): void {
 
 // ---- Events ---------------------------------------------------------------------------
 
+// Enter in the color field would submit the form and reload the page without the recipe.
+$('recipe').addEventListener('submit', (e) => e.preventDefault());
 $<HTMLInputElement>('brand-picker').addEventListener('input', (e) => change({ brand: (e.target as HTMLInputElement).value }));
 const hexInput = $<HTMLInputElement>('brand-hex');
 hexInput.addEventListener('input', () => {

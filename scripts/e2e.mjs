@@ -73,6 +73,11 @@ try {
     assert.match(page.url(), /[?&]b=7c3aed(&|$)/);
     assert.equal(await page.inputValue('#brand-picker'), '#7c3aed');
 
+    await page.press('#brand-hex', 'Enter');
+    await settle(page);
+    assert.match(page.url(), /[?&]b=7c3aed(&|$)/, 'Enter does not submit the form and reload');
+    assert.equal(await cssVar(page, '--color-primary'), '#7c3aed');
+
     await page.fill('#brand-hex', 'zzz');
     await page.locator('#brand-hex').blur();
     assert.equal(await page.locator('#brand-hex').getAttribute('aria-invalid'), 'true');
