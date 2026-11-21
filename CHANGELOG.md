@@ -5,6 +5,33 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Feature round: your fonts and line heights (round 12)
+
+Used the studio as a newcomer would: the color side is complete, but the type scale handed out sizes only. Every
+`--text-*` needed a line height picked by hand, and `--font-sans` was always the system stack, so the brand's own
+typeface never reached the tokens or the preview. That was the biggest hole in "a whole design system".
+
+- **Added: a line height for every type step** (`lineHeight` in `core/dimensions.ts`): about 8px of leading at the
+  desktop size, clamped to 1.1..1.5, so body text is 1.5 and display sizes tighten. Exported as
+  `--text-<step>--line-height` in CSS and Tailwind (Tailwind applies it with `text-<step>`), a DTCG `lineHeight`
+  group, a SCSS `$line-height` map and Figma `line-height/*` variables in px. The type specimen shows size / line
+  height, and the preview now takes its line heights from these tokens instead of hard-coded values.
+- **Added: body and heading fonts in the recipe.** "Body font" and "Heading font" fields in the studio's Type group,
+  `--font` and `--heading-font` in the CLI, `f=` and `fh=` in links (left out when empty). They go in front of the
+  system stack as `--font-sans` and the new `--font-heading` (headings fall back to the body font). The Figma payload
+  gets `font-family/*` STRING variables only for named fonts. The recreate command carries them, quoted.
+- **Validation at the boundary:** `parseFontName` in `core/tokens.ts` takes letters and digits of any script,
+  spaces, hyphens and underscores (48 characters at most) and refuses everything else, so a name cannot break out
+  of the quoted CSS string, the shell command or the header comment. A bad name in the studio is marked invalid with
+  a message and the last good name stays.
+- Tests: 4 new unit tests (line heights, font name validation and stacks, every export format, CLI flags over a
+  link and a refused name; 42 in all) and an e2e check (computed font family and line height in the preview, URL,
+  refusal of `Inter'; } body {...}`, export header, clearing the field). Screenshots refreshed.
+- Not done: huecraft does not load web fonts (the preview shows a named font only if it is installed locally); no
+  font-weight tokens. Gaps carried over, still open and not code bugs: Pages workflow never run and no homepage;
+  Figma payload never imported; only Chromium; no social image; Lighthouse not re-run.
+- Commits this round carry Opus attribution because this round ran on Opus.
+
 ### Second security pass (round 11)
 
 - **Fixed: a crafted studio link could drive the terminal.** `huecraft '?b=%1B]0;x%07%1B[2J'` echoed the decoded

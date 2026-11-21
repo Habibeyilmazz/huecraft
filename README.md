@@ -57,8 +57,12 @@ Run `node dist-cli/cli.js --help` for every option. huecraft is not published to
   3 to 1 for fills, borders and focus rings). The Contrast tab lists every checked pair with its WCAG ratio and APCA
   Lc value, shows what was moved, and has a step-by-step matrix for any two scales. Turn the fixing off to see what
   fails and what huecraft suggests.
-- **Type, space, radius and shadow scales.** A modular type scale with fluid `clamp()` sizes, a spacing scale from one
-  unit, a radius scale with one roundness control, and five layered shadows per theme.
+- **Type, space, radius and shadow scales.** A modular type scale with fluid `clamp()` sizes and a line height for
+  each size (1.5 for body text, tightening to 1.1 for display sizes), a spacing scale from one unit, a radius scale
+  with one roundness control, and five layered shadows per theme.
+- **Your fonts.** Name a body font and a heading font (say `Source Sans 3` and `Fraunces`) and they go in front of
+  the system font stacks as `--font-sans` and `--font-heading`; headings fall back to the body font. The preview and
+  the type specimen use them, so you see your type at every size.
 - **Live preview.** A dashboard, a table, a form with an error state, buttons, badges, alerts and an article, styled
   only by the CSS variables you export. Light and dark switch instantly.
 - **Color-vision simulation.** View the whole studio as someone with protanopia, deuteranopia, tritanopia or
@@ -103,12 +107,19 @@ huecraft <studio link> [options]
       --unit <px>    spacing unit, 3..6   (default: 4)
       --radius <n>   corner roundness, 0..2   (default: 1)
       --level <l>    WCAG contrast target, AA | AAA   (default: AA)
+      --font <name>  your body font family, put in front of the system fonts   (default: none)
+      --heading-font <name>
+                     your heading font family; headings fall back to the body font   (default: none)
       --success-hue <deg>, --warning-hue <deg>, --danger-hue <deg>, --info-hue <deg>
                      OKLCH hue of a status scale, 0..360
                      (defaults: success 150, warning 75, danger 25, info 245)
       --no-fix       keep preferred steps even where they miss the contrast target
       --fix          turn fixing back on when a studio link says fx=0
 ```
+
+Line heights follow Tailwind v4's naming, `--text-xl--line-height`, in both the CSS and the Tailwind export, so in
+Tailwind `text-xl` sets the size and its line height together. The design-tokens JSON has them in a `lineHeight`
+group, SCSS in a `$line-height` map, and the Figma payload as `line-height/*` variables in px.
 
 The CSS, Tailwind and SCSS output starts with a comment holding the command that recreates it; the design-tokens
 JSON has it in `$description`. The Figma payload carries no such note, because it is a request body.
@@ -159,6 +170,13 @@ Some decisions worth knowing:
 - In the Tailwind export, shadow utilities keep the light-theme shadows, because Tailwind inlines shadow values.
 - Status hues are not moved for you. huecraft flags a status within 30° of the brand or of another status, but
   which one to move, and where, is your call. The 30° line is a rule of thumb, not a perceptual measure.
+- huecraft does not load fonts. The preview shows a named font only if it is installed on your device, and your
+  site still has to load it (with `@font-face` or a font service). A font name may use letters and digits of any
+  script, spaces, hyphens and underscores, up to 48 characters; quotes, commas and other punctuation are refused so
+  the name cannot break out of the CSS. The fallback is always the system sans-serif stack, also for a serif heading.
+- Line heights are unitless numbers from the desktop size; on a phone, fluid headings are a little smaller, so their
+  line height is a little looser than ideal. The Figma payload has a `font-family/*` string variable only for a font
+  you named, because Figma variables hold one family, not a stack.
 - Simulated color vision is an approximation and does not replace testing with people.
 
 ## How it compares
@@ -198,7 +216,7 @@ To publish the studio, enable GitHub Pages for the repository with "GitHub Actio
 
 - A brand color outside sRGB (Display P3 input)
 - Per-token overrides in the studio
-- Font family choices and line-height tokens
+- Font weight tokens
 - Importing an existing palette
 - More export targets (Style Dictionary, iOS, Android)
 - A published npm package
