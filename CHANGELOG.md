@@ -5,6 +5,13 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Launch pass
+
+- Added: "How it compares" in the README (Radix Colors, Tailwind, Leonardo, Material Theme Builder, Style Dictionary,
+  oklch.com, with when to use them instead), CONTRIBUTING.md, bug and feature issue templates.
+- Baseline re-verified: 35 unit tests, typecheck and CI green. Still not done: Pages workflow never run, Figma JSON never
+  imported into Figma, only Chromium exercised (the Firefox/Safari blob-revoke fix is unverified).
+
 ### Reliability pass
 
 Tried to break the tool: 324 generated recipes (greys, black, white, primaries, random hexes, every limit, both levels,

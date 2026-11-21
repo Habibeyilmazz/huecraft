@@ -144,6 +144,22 @@ Some decisions worth knowing:
   which one to move, and where, is your call. The 30° line is a rule of thumb, not a perceptual measure.
 - Simulated color vision is an approximation and does not replace testing with people.
 
+## How it compares
+
+huecraft is a generator that goes from one color to a whole token set. It is young and has one maintainer, so be
+clear about when another tool is the better pick.
+
+| If you want | Use | Why not huecraft |
+| --- | --- | --- |
+| A hand-tuned scale for one color, with a large community behind it | [Radix Colors](https://www.radix-ui.com/colors) | Radix scales are designed by hand and battle-tested; huecraft's are computed |
+| Tailwind's own palette and the default `@theme` | [Tailwind CSS](https://tailwindcss.com) | huecraft only helps when you want a palette from your brand color |
+| A color-system editor with team features and Figma plugins | [Leonardo](https://leonardocolor.io), [Material Theme Builder](https://material-foundation.github.io/material-theme-builder/) | huecraft has no accounts, plugin or live Figma sync |
+| Transforming token files into many platforms | [Style Dictionary](https://styledictionary.com) | huecraft writes five formats, not iOS or Android |
+| Free-form OKLCH exploration | [oklch.com](https://oklch.com) | huecraft is opinionated: scales, semantic tokens and contrast fixing, not a picker |
+
+Where huecraft fits: you have one brand color and want light and dark semantic tokens that already pass your
+contrast target, type, spacing and shadow scales, and a link you can send someone.
+
 ## Development
 
 ```bash
@@ -168,6 +184,10 @@ To publish the studio, enable GitHub Pages for the repository with "GitHub Actio
 - Importing an existing palette
 - More export targets (Style Dictionary, iOS, Android)
 - A published npm package
+
+## Contributing
+
+Issues and pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
