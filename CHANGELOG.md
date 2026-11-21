@@ -5,6 +5,27 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Feature round: shadcn/ui theme (round 15)
+
+Used the studio as someone starting a React app would: the palette is ready, but the most common way to theme a new
+app today is shadcn/ui, whose components read their own variable names (`--background`, `--primary-foreground`,
+`--muted`, `--sidebar-*`, `--chart-1..5`). None of the five exports gave those, so the semantic tokens had to be
+mapped by hand.
+
+- **Added: a sixth format, `shadcn`** (studio Export tab and `--format shadcn`, file `shadcn-theme.css`). It prints
+  the `:root` and `.dark` blocks of a shadcn `globals.css` as hex, plus `--radius` (the `lg` radius). The mapping is
+  `SHADCN_MAP` in `core/export.ts`; every `x` / `x-foreground` pair maps to a pair huecraft already checks.
+- **Changed: the format switch is a 3x2 grid under 480px** instead of five buttons and a straggler.
+- Tests: a unit test checks every variable in both blocks and that every foreground pair passes AA or AAA for four
+  brands (it fails if a mapping points at the wrong token); the seeded random-recipe test covers the new format; the
+  e2e export check renders it. 44 unit tests, 21 e2e checks pass. Also compiled the output with the Tailwind v4.1.11
+  CLI under shadcn's `@theme inline` mapping (in a scratch folder, not added to the repo): utilities resolve.
+- Known limit, in the README: shadcn's newer destructive button hard-codes `text-white`, while huecraft's
+  `--destructive-foreground` is the dark neutral in the dark theme. Not tried inside a real shadcn project.
+- Gaps re-checked, unchanged and not code bugs: no web fonts or weight tokens; Pages workflow never run, no homepage
+  (owner enables Pages); Figma payload never imported; only Chromium; no social preview image.
+- Commits this round carry Opus attribution because this round ran on Opus.
+
 ### Launch pass (round 14)
 
 - Checked the previous gaps: `npx github:Habibeyilmazz/huecraft 7c3aed --format tailwind` really works from a clean
