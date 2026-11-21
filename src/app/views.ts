@@ -15,7 +15,7 @@ const inkOn = (hex: string) => (wcagContrast('#000000', hex) >= wcagContrast('#f
 const fmtRatio = (ratio: number) => (Math.floor(ratio * 100) / 100).toFixed(2); // floor: never round a 4.496 up to a pass
 const px = (v: number) => `${Math.round(v * 10) / 10}px`;
 
-// The two data tables become stacked grids on phones (chrome.css). Explicit roles keep
+// The two data tables become stacked grids in a narrow workspace (chrome.css). Explicit roles keep
 // them tables for screen readers in browsers that drop the semantics with the layout.
 const headCell = (label: string) => `<th scope="col" role="columnheader">${label}</th>`;
 const refDot = (ref: Ref) => `<span class="dot" style="background:${ref === 'white' ? '#fff' : `var(${refVar(ref)})`}"></span>`;

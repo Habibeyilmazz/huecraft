@@ -816,6 +816,115 @@ input[type='color']::-moz-color-swatch {
   font-weight: 400;
 }
 
+/* ---- Tables in a narrow workspace ----
+   When its region is too narrow for the columns, each row becomes a small grid, so the result
+   of a contrast check and both themes of a token are on screen without scrolling sideways.
+   The region is measured, not the screen: the recipe rail takes 316px of a laptop. */
+.scroll-x {
+  container: region / inline-size;
+}
+/* A suggestion wraps in its column rather than pushing the table past its region. */
+.data .c-hint {
+  min-width: 13rem;
+  white-space: normal;
+}
+@container region (max-width: 620px) {
+  #semantic-table,
+  #semantic-table thead,
+  #semantic-table tbody {
+    display: block;
+  }
+  #semantic-table tr {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: baseline;
+    gap: 3px 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--c-rule);
+  }
+  #semantic-table th,
+  #semantic-table td {
+    padding: 0;
+    border: 0;
+    white-space: normal;
+  }
+  #semantic-table th:first-child {
+    grid-column: 1 / -1;
+  }
+  #semantic-table thead th:first-child {
+    display: none; /* "Token" says nothing the names below do not */
+  }
+  /* The dot stays beside the step name and the hex value goes under it, so every row has the same shape. */
+  #semantic-table .num.quiet {
+    display: block;
+  }
+  #semantic-table td {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  #semantic-table .dot {
+    flex: none;
+    margin: 1px 0 0;
+  }
+}
+@container region (max-width: 980px) {
+  #pairs-table,
+  #pairs-table tbody {
+    display: block;
+  }
+  #pairs-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  #pairs-table tr {
+    display: grid;
+    grid-template-columns: 58px auto auto minmax(0, 1fr) auto;
+    align-items: baseline;
+    gap: 3px 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--c-rule);
+  }
+  #pairs-table th,
+  #pairs-table td {
+    padding: 0;
+    border: 0;
+    white-space: normal;
+  }
+  #pairs-table .c-sample {
+    grid-row: 1 / span 2;
+    align-self: start;
+  }
+  #pairs-table .c-pair {
+    grid-column: 2 / 5;
+  }
+  #pairs-table .c-result {
+    grid-area: 1 / 5;
+  }
+  #pairs-table .c-ratio {
+    grid-area: 2 / 2;
+  }
+  #pairs-table .c-needs {
+    grid-area: 2 / 3;
+  }
+  #pairs-table .c-needs::before {
+    content: 'needs ';
+  }
+  #pairs-table .c-apca {
+    grid-area: 2 / 4 / auto / -1;
+  }
+  #pairs-table .c-hint {
+    grid-area: 3 / 2 / auto / -1;
+    min-width: 0;
+  }
+  #pairs-table .c-hint:empty {
+    display: none;
+  }
+}
+
 /* ---- Export ---- */
 .export-bar {
   display: flex;
@@ -950,87 +1059,10 @@ input[type='color']::-moz-color-swatch {
     font-size: 1rem;
   }
 
-  /* Tables with too many columns for a phone: each row becomes a small grid, so the
-     result of a contrast check and both themes of a token are on screen without scrolling. */
-  .data.stacks,
-  .data.stacks thead,
-  .data.stacks tbody {
-    display: block;
-  }
-  .data.stacks tr {
-    display: grid;
-    align-items: baseline;
-    gap: 3px 12px;
-    padding: 10px 0;
-    border-bottom: 1px solid var(--c-rule);
-  }
-  .data.stacks th,
-  .data.stacks td {
-    padding: 0;
-    border: 0;
-    white-space: normal;
-  }
-  #semantic-table tr {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  #semantic-table th:first-child {
-    grid-column: 1 / -1;
-  }
-  #semantic-table thead th:first-child {
-    display: none; /* "Token" says nothing the names below do not */
-  }
-  /* The dot stays beside the step name and the hex value goes under it, so every row has the same shape. */
-  #semantic-table .num.quiet {
-    display: block;
-  }
-  #semantic-table td {
-    display: flex;
-    align-items: flex-start;
-    gap: 8px;
-  }
-  #semantic-table .dot {
-    flex: none;
-    margin: 1px 0 0;
-  }
-  #pairs-table thead {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-  }
-  #pairs-table tr {
-    grid-template-columns: 58px auto auto minmax(0, 1fr) auto;
-  }
-  #pairs-table .c-sample {
-    grid-row: 1 / span 2;
-    align-self: start;
-  }
-  #pairs-table .c-pair {
-    grid-column: 2 / 5;
-  }
-  #pairs-table .c-result {
-    grid-area: 1 / 5;
-  }
-  #pairs-table .c-ratio {
-    grid-area: 2 / 2;
-  }
-  #pairs-table .c-needs {
-    grid-area: 2 / 3;
-  }
-  #pairs-table .c-needs::before {
-    content: 'needs ';
-  }
-  #pairs-table .c-apca {
-    grid-area: 2 / 4 / auto / -1;
-  }
-  #pairs-table .c-hint {
-    grid-area: 3 / 2 / auto / -1;
-  }
-  #pairs-table .c-hint:empty {
-    display: none;
-  }
   .moves li {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .verdict {
     grid-template-columns: minmax(0, 1fr);
   }
   .btn,

@@ -180,6 +180,17 @@ try {
     await close();
   });
 
+  await check('a table region is a Tab stop only while it scrolls sideways', async () => {
+    const tabIndex = (page, sel) => page.locator(sel).evaluate((e) => e.tabIndex);
+    const wide = await open('?tab=contrast');
+    assert.equal(await tabIndex(wide.page, '#panel-contrast .scroll-x:has(#pairs-table)'), -1);
+    assert.equal(await tabIndex(wide.page, '#panel-contrast .scroll-x:has(#matrix)'), -1);
+    await wide.page.setViewportSize({ width: 390, height: 844 });
+    await wide.page.waitForFunction(() => document.querySelector('.scroll-x:has(#matrix)').tabIndex === 0);
+    assert.equal(await tabIndex(wide.page, '#panel-contrast .scroll-x:has(#pairs-table)'), -1, 'stacked rows do not scroll');
+    await wide.close();
+  });
+
   await check('contrast matrix follows its two selects', async () => {
     const { page, close } = await open('?tab=contrast');
     assert.equal(await page.locator('#matrix tbody td').count(), 121);

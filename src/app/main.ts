@@ -188,7 +188,16 @@ function render(): void {
     return `<rect x="${i * 6 + 1}" y="5" width="6" height="22" fill="${hex}"/>`;
   });
   $<HTMLLinkElement>('favicon').href = `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">${bars.join('')}</svg>`)}`;
+  syncScrollRegions();
 }
+
+/** A wide table scrolls sideways inside its region. The region is a Tab stop only while it has something to scroll. */
+function syncScrollRegions(): void {
+  for (const region of document.querySelectorAll<HTMLElement>('.scroll-x, .pv-table-wrap')) {
+    region.tabIndex = region.scrollWidth > region.clientWidth ? 0 : -1;
+  }
+}
+window.addEventListener('resize', syncScrollRegions);
 
 let frame = 0;
 let urlTimer = 0;
