@@ -293,6 +293,36 @@ try {
     await close();
   });
 
+  await check('a blocked clipboard says so; the studio keeps working offline and follows a hand-edited URL', async () => {
+    const { page, errors, close } = await open('?b=2456e6');
+    await page.context().setOffline(true);
+    await page.evaluate(() => (navigator.clipboard.writeText = () => Promise.reject(new DOMException('denied', 'NotAllowedError'))));
+    await page.click('#share');
+    await page.waitForFunction(() => document.getElementById('live').textContent !== '');
+    assert.match(await page.locator('#live').innerText(), /blocked/i);
+    for (const tab of ['preview', 'contrast', 'scale', 'export', 'palette']) await page.click(`#tab-${tab}`);
+    await page.evaluate(() => {
+      history.replaceState(null, '', '?b=ff0000');
+      dispatchEvent(new PopStateEvent('popstate'));
+    });
+    await settle(page);
+    assert.equal(await page.inputValue('#brand-hex'), '#ff0000');
+    assert.deepEqual(errors, []);
+    await close();
+  });
+
+  await check('hostile text in the brand field never breaks the page', async () => {
+    const { page, errors, close } = await open();
+    for (const text of ['<img src=x onerror=alert(1)>', '😀'.repeat(30), 'a'.repeat(500), 'oklch(9 9 9)', '#7c3aed']) {
+      await page.fill('#brand-hex', text);
+      await page.locator('#brand-hex').blur();
+    }
+    await settle(page);
+    assert.equal(await cssVar(page, '--color-primary'), '#7c3aed');
+    assert.deepEqual(errors, []);
+    await close();
+  });
+
   await check('no axe violations in any tab, either theme', async () => {
     for (const theme of ['light', 'dark']) {
       for (const tab of ['palette', 'preview', 'contrast', 'scale', 'export']) {

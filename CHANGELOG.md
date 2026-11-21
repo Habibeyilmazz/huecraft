@@ -5,6 +5,23 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Reliability pass
+
+Tried to break the tool: 324 generated recipes (greys, black, white, primaries, random hexes, every limit, both levels,
+all five formats) for failed pairs or `NaN` in output; odd colors, numbers and unicode through the parser; the CLI with
+closed pipes, repeated and missing flags; the studio with 100 "Surprise me" clicks, junk and emoji in the color field,
+a 200 KB query string, offline use, a hand-edited URL and a blocked clipboard. Nearly all of it already held.
+
+- **Fixed: numeric fields were looser than documented.** `0x10` and `" 16 "` were accepted while `1e3` was not. Fields
+  now take plain decimals only (`.5` and `17.5` fine), with a linear-time check and a test for a 200,000-digit input.
+- **Fixed: "Download file" revoked its blob URL in the same tick as the click**, which some browsers (not Chromium, the only
+  one tested here) treat as cancelling the save. It now waits 10 seconds.
+- End-to-end: a blocked clipboard shows the "blocked" message, the studio keeps working with the network off and
+  follows a hand-edited URL, and hostile text in the color field leaves the page intact.
+- Not done: the Pages workflow still has never run (enabling Pages is the owner's call); Figma variables JSON has never
+  been imported into Figma; only Chromium is exercised. A 200 KB query string gets a 431 from the preview server before
+  the app sees it, which is the server's limit, not the app's. `#export` in the URL is not read; tabs use `?tab=`.
+
 ### Feature round: status hues
 
 - **Added: status hues are part of the recipe.** Four sliders under "Status hues" in the studio, `--success-hue`,

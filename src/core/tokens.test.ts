@@ -193,3 +193,15 @@ test('hueClashes flags statuses close to the brand or to each other, across 0°'
   assert.deepEqual(hueClashes({ ...DEFAULT_RECIPE, danger: 60 }), [{ a: 'warning', b: 'danger', degrees: 15 }]);
   assert.deepEqual(hueClashes({ ...DEFAULT_RECIPE, brand: '#2b2f36', info: 260 }), [], 'a near-grey brand has no hue to clash with');
 });
+
+test('numbers must be plain decimals: hex, padding and exponents are rejected the same way', () => {
+  for (const bad of ['0x10', ' 16 ', '1e1', '+16', '1_6', '16.']) {
+    const { recipe, errors } = parseRecipe({ base: bad, success: bad });
+    assert.equal(errors.length, 2, `"${bad}" should be rejected`);
+    assert.equal(recipe.base, DEFAULT_RECIPE.base);
+  }
+  const t0 = performance.now();
+  assert.equal(parseRecipe({ base: '1'.repeat(200_000) + 'x' }).errors.length, 1);
+  assert.ok(performance.now() - t0 < 500, 'a long digit run does not backtrack');
+  assert.deepEqual(parseRecipe({ base: '17.5', radius: '.5', success: '0' }).errors, []);
+});

@@ -352,7 +352,8 @@ $('download-code').addEventListener('click', () => {
   link.href = URL.createObjectURL(new Blob([exportTokens(tokens, state.format)], { type: 'text/plain' }));
   link.download = FORMATS[state.format].file;
   link.click();
-  URL.revokeObjectURL(link.href);
+  // Some browsers start the save after the click returns; revoking at once cancels it.
+  setTimeout(() => URL.revokeObjectURL(link.href), 10_000);
   toast(`Saved ${link.download}`);
 });
 

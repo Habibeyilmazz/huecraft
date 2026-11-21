@@ -80,7 +80,8 @@ export function parseRecipe(input: Partial<Record<keyof Recipe, string | undefin
     if (raw === undefined) continue;
     const n = Number(raw);
     const { min, max } = LIMITS[key];
-    if (raw.trim() !== '' && Number.isFinite(n) && n >= min && n <= max) recipe[key] = n;
+    // A plain decimal only: Number() alone would take "0x10" and " 16 ".
+    if (/^-?(\d+(\.\d+)?|\.\d+)$/.test(raw) && n >= min && n <= max) recipe[key] = n;
     else errors.push(`${key in STATUS_HUES ? `${key} hue` : key}: "${raw}" must be a number from ${min} to ${max}`);
   }
   if (input.ratio !== undefined) {
