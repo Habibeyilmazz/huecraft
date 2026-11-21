@@ -4,7 +4,7 @@
 import { wcagContrast } from '../core/color.ts';
 import { VIEWPORT_MAX, VIEWPORT_MIN } from '../core/dimensions.ts';
 import { STEPS, SCALE_NAMES, type Scale, type ScaleName } from '../core/scales.ts';
-import { refLabel, textMin, type PairCheck, type SemanticToken, type Theme } from '../core/semantic.ts';
+import { refLabel, refVar, textMin, type PairCheck, type Ref, type SemanticToken, type Theme } from '../core/semantic.ts';
 import type { TokenSet } from '../core/tokens.ts';
 
 const el = (id: string) => document.getElementById(id)!;
@@ -18,6 +18,7 @@ const px = (v: number) => `${Math.round(v * 10) / 10}px`;
 // The two data tables become stacked grids on phones (chrome.css). Explicit roles keep
 // them tables for screen readers in browsers that drop the semantics with the layout.
 const headCell = (label: string) => `<th scope="col" role="columnheader">${label}</th>`;
+const refDot = (ref: Ref) => `<span class="dot" style="background:${ref === 'white' ? '#fff' : `var(${refVar(ref)})`}"></span>`;
 
 // ---- Palette ----------------------------------------------------------------
 
@@ -116,7 +117,9 @@ export function renderContrast(tokens: TokenSet, theme: Theme, matrix: { fg: Sca
   el('moves').innerHTML = themeMoves.length
     ? `<div class="moves">
         <h3>${recipe.fix ? `Moved to reach ${recipe.level} in the ${theme} theme` : `Suggested moves for the ${theme} theme`}</h3>
-        <ul>${themeMoves.map((m) => `<li><code>${m.token}</code> ${recipe.fix ? 'moved' : 'would move'} from ${refLabel(m.from)} to ${refLabel(m.to)}</li>`).join('')}</ul>
+        <ul>${themeMoves.map((m) => `<li><code>--color-${m.token}</code>
+          <span><span class="visually-hidden">${recipe.fix ? 'moved' : 'would move'} from </span>${refDot(m.from)}${refLabel(m.from)}
+          <span class="quiet">to</span> ${refDot(m.to)}${refLabel(m.to)}</span></li>`).join('')}</ul>
       </div>`
     : '';
 
@@ -159,7 +162,8 @@ export function renderScale(tokens: TokenSet): void {
       <section class="pv-card spec-space" aria-labelledby="spec-space"><h3 id="spec-space">Spacing</h3><ol>${space}</ol></section>
       <div style="display:grid;gap:var(--space-5);align-content:start">
         <section class="pv-card spec-radius" aria-labelledby="spec-radius"><h3 id="spec-radius">Radius <code>--radius-*</code></h3><ol class="spec-tiles">${radius}</ol></section>
-        <section class="pv-card spec-shadow" aria-labelledby="spec-shadow"><h3 id="spec-shadow">Shadows <code>--shadow-*</code></h3><ol class="spec-tiles">${shadow}</ol></section>
+        <section class="pv-card spec-shadow" aria-labelledby="spec-shadow"><h3 id="spec-shadow">Shadows <code>--shadow-*</code></h3><ol class="spec-tiles">${shadow}</ol>
+          <p class="pv-muted spec-dark-note">The dark theme uses stronger shadows, and they still read faintly on a dark page. Lift things there with a lighter surface as well.</p></section>
       </div>
     </div>`;
 }

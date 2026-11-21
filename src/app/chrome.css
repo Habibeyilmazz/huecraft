@@ -271,7 +271,6 @@ select {
   max-height: 100vh;
   overflow-y: auto;
   padding: 18px 24px 24px var(--gutter);
-  border-right: 1px solid var(--c-rule);
 }
 .group {
   padding-bottom: 18px;
@@ -448,8 +447,10 @@ input[type='color']::-moz-color-swatch {
 
 /* ---- Workspace ---- */
 #workspace {
+  align-self: stretch; /* so the rule beside the rail reaches the footer, however short the rail is */
   min-width: 0;
   padding: 0 var(--gutter) 64px;
+  border-left: 1px solid var(--c-rule);
 }
 #workspace:focus {
   outline: none;
@@ -733,16 +734,23 @@ input[type='color']::-moz-color-swatch {
   font-weight: 650;
 }
 .moves ul {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 4px 24px;
+  max-width: 44rem;
   margin-top: 8px;
+  border-top: 1px solid var(--c-rule);
 }
 .moves li {
-  font-size: 0.875rem;
+  display: grid;
+  grid-template-columns: minmax(0, 15rem) minmax(0, 1fr);
+  align-items: center;
+  gap: 2px 16px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--c-rule);
 }
 .moves code {
-  font: 0.8125rem var(--f-mono);
+  font: 550 0.8125rem var(--f-mono);
+}
+.moves .dot {
+  margin-right: 6px;
 }
 .matrix-controls {
   display: flex;
@@ -767,6 +775,14 @@ input[type='color']::-moz-color-swatch {
 }
 .matrix tbody th {
   text-align: right;
+}
+/* The row labels stay put while a narrow screen scrolls the columns. */
+.matrix tbody th,
+.matrix thead td {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--c-page);
 }
 .matrix td {
   padding: 0;
@@ -875,8 +891,10 @@ input[type='color']::-moz-color-swatch {
     position: static;
     max-height: none;
     padding: 20px var(--gutter) 4px;
-    border-right: 0;
     border-bottom: 1px solid var(--c-rule);
+  }
+  #workspace {
+    border-left: 0;
   }
   .more > summary {
     display: flex;
@@ -941,7 +959,7 @@ input[type='color']::-moz-color-swatch {
   }
   .data.stacks tr {
     display: grid;
-    align-items: center;
+    align-items: baseline;
     gap: 3px 12px;
     padding: 10px 0;
     border-bottom: 1px solid var(--c-rule);
@@ -961,7 +979,10 @@ input[type='color']::-moz-color-swatch {
   #semantic-table thead th:first-child {
     display: none; /* "Token" says nothing the names below do not */
   }
-  /* The dot stays beside the first line; a hex value that does not fit wraps under the step name. */
+  /* The dot stays beside the step name and the hex value goes under it, so every row has the same shape. */
+  #semantic-table .num.quiet {
+    display: block;
+  }
   #semantic-table td {
     display: flex;
     align-items: flex-start;
@@ -990,7 +1011,6 @@ input[type='color']::-moz-color-swatch {
   }
   #pairs-table .c-result {
     grid-area: 1 / 5;
-    align-self: start;
   }
   #pairs-table .c-ratio {
     grid-area: 2 / 2;
@@ -1009,6 +1029,9 @@ input[type='color']::-moz-color-swatch {
   }
   #pairs-table .c-hint:empty {
     display: none;
+  }
+  .moves li {
+    grid-template-columns: minmax(0, 1fr);
   }
   .btn,
   select,

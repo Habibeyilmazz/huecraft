@@ -45,7 +45,11 @@
   background: var(--color-surface);
   box-shadow: var(--shadow-sm);
 }
-.pv-dash { grid-column: span 8; }
+.pv-dash {
+  grid-column: span 8;
+  display: flex;
+  flex-direction: column;
+}
 .pv-form { grid-column: span 4; }
 .pv-kit { grid-column: span 5; }
 .pv-article { grid-column: span 7; }
@@ -180,7 +184,11 @@
   color: var(--color-text-muted);
   font-size: var(--text-sm);
 }
+/* The chart takes up the slack when the form beside the dashboard is taller. */
 .pv-chart {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
   margin: var(--space-6) 0 0;
 }
 .pv-chart figcaption {
@@ -191,7 +199,8 @@
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: var(--space-3);
-  height: 148px;
+  flex: 1;
+  min-height: 148px;
   margin-top: var(--space-2);
 }
 .pv-chart li {
@@ -225,9 +234,17 @@
   padding-top: var(--space-1);
 }
 .pv-table-wrap {
+  container-type: inline-size;
   position: relative;
   margin-top: var(--space-6);
   overflow-x: auto;
+}
+/* On a phone the table keeps who and what state, and drops the bike and the due date. */
+@container (max-width: 26rem) {
+  .pv-table :is(th, td):nth-child(3),
+  .pv-table :is(th, td):nth-child(4) {
+    display: none;
+  }
 }
 .pv-table {
   width: 100%;
@@ -416,6 +433,16 @@
 .spec-meta {
   text-align: right;
 }
+/* Spread the rows when the cards beside this one make it taller than its list. */
+.spec-space,
+.spec-space ol {
+  display: flex;
+  flex-direction: column;
+}
+.spec-space ol {
+  flex: 1;
+  justify-content: space-between;
+}
 .spec-space li {
   display: grid;
   grid-template-columns: 5.5rem 4rem minmax(0, 1fr);
@@ -454,6 +481,10 @@
   border: 1px solid var(--color-border);
   background: var(--color-surface);
 }
+/* Seven radii: four and three, rather than a row with two left over. */
+.spec-radius .spec-tiles {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
 .spec-radius i {
   border: 0;
   background: var(--color-primary-subtle);
@@ -464,6 +495,13 @@
 }
 .spec-shadow i {
   border-radius: var(--radius-md);
+}
+.spec-dark-note {
+  display: none;
+  margin-top: var(--space-4);
+}
+[data-theme='dark'] .spec-dark-note {
+  display: block;
 }
 
 @media (max-width: 1240px) {
