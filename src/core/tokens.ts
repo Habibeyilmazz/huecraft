@@ -49,7 +49,7 @@ export const LIMITS = {
 const KEYS = { brand: 'b', tint: 't', ratio: 'r', base: 's', unit: 'u', radius: 'rd', level: 'lv', fix: 'fx' } as const;
 
 /**
- * Validates untrusted recipe input (URL fragment, CLI flags). Every field falls
+ * Validates untrusted recipe input (URL query string, CLI flags). Every field falls
  * back to its default when missing; invalid values are reported in `errors`
  * and replaced by the default, so the result is always a usable recipe.
  */

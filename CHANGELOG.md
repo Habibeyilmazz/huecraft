@@ -3,6 +3,34 @@
 All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+Changes from an independent first-run review: a fresh clone, the README followed to the letter, then a read of the
+whole codebase.
+
+### Added
+
+- The brand color can be written as `rgb()` or `oklch()` as well as hex, in the studio and the CLI
+  (`parseColor` in `core/color.ts`). It is still stored as sRGB hex; an `oklch()` color outside sRGB loses chroma.
+- The design-tokens JSON now has a `shadow` group per theme. Shadows were in every other text format but not there.
+
+### Fixed
+
+- Pressing Enter in the brand color field submitted the recipe form and reloaded the studio with the default recipe.
+- Typing a six-digit hex no longer flashes the three-digit color it passes through. Three digits apply on Enter or
+  when the field is left.
+- README: it said every export starts with a comment holding the recreate command. Only CSS, Tailwind and SCSS do;
+  the design-tokens JSON has it in `$description` and the Figma payload has none. It now also says that Figma's
+  variables endpoint is Enterprise only.
+
+### Checked, nothing to change
+
+- Quickstart from a fresh clone: `npm ci`, `npm run dev`, the compiled CLI and `npx github:Habibeyilmazz/huecraft`.
+- 24,066 recipes (4,011 brand colors, three tints, AA and AAA): no failing pair with fixing on, the brand color
+  always kept exactly, lightness always falling from 50 to 950.
+- The Tailwind export compiles with Tailwind CSS 4.3.5 and the SCSS export with Dart Sass. Still done by hand.
+- The action versions in the Pages workflow exist. The workflow itself has still never run.
+
 ## [0.1.0] - 2026-11-21
 
 First release.
@@ -29,7 +57,8 @@ First release.
 - The studio chrome (`chrome.css`) is achromatic on purpose. Keep hue out of it.
 - Imports use `.ts` extensions so Node can run the sources directly; `tsconfig.cli.json` rewrites them for the CLI
   build.
-- The Tailwind and SCSS exports were compiled once by hand with Tailwind 4.3 and Dart Sass; there is no automated
-  check for that. The Figma payload has not been sent to the Figma API.
+- The Tailwind and SCSS exports were compiled by hand with Tailwind 4.3 and Dart Sass; there is no automated
+  check for that. The Figma payload has not been sent to the Figma API (it needs an Enterprise plan and a token).
+- Status hues are fixed and the brand color is sRGB only. Both are design limits listed in the README, not bugs.
 - GitHub Pages is not enabled. The Pages workflow is manual only.
 - Ports: dev server 4140, preview 4141, e2e 4142.
