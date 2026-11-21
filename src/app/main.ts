@@ -210,20 +210,24 @@ function change(patch: Partial<Recipe>): void {
 $('recipe').addEventListener('submit', (e) => e.preventDefault());
 $<HTMLInputElement>('brand-picker').addEventListener('input', (e) => change({ brand: (e.target as HTMLInputElement).value }));
 const hexInput = $<HTMLInputElement>('brand-hex');
-hexInput.addEventListener('input', () => {
+function useTypedColor(): boolean {
   const hex = parseColor(hexInput.value);
   if (hex) {
     hexInput.removeAttribute('aria-invalid');
     $('brand-error').hidden = true;
     change({ brand: hex });
   }
+  return hex !== null;
+}
+hexInput.addEventListener('input', () => {
+  // Three hex digits are usually the first half of six, so they wait until the field is committed.
+  if (!/^\s*#?[0-9a-f]{3}\s*$/i.test(hexInput.value)) useTypedColor();
 });
 // Report a bad value once the field is committed, not on every keystroke.
 hexInput.addEventListener('change', () => {
-  const invalid = !parseColor(hexInput.value);
-  if (invalid) hexInput.setAttribute('aria-invalid', 'true');
-  else hexInput.removeAttribute('aria-invalid');
-  $('brand-error').hidden = !invalid;
+  if (useTypedColor()) return;
+  hexInput.setAttribute('aria-invalid', 'true');
+  $('brand-error').hidden = false;
 });
 hexInput.addEventListener('blur', () => {
   if (parseColor(hexInput.value)) hexInput.value = state.recipe.brand;

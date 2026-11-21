@@ -78,6 +78,16 @@ try {
     assert.match(page.url(), /[?&]b=7c3aed(&|$)/, 'Enter does not submit the form and reload');
     assert.equal(await cssVar(page, '--color-primary'), '#7c3aed');
 
+    // Half-typed hex does not flash a three-digit color; committing the field uses it.
+    await page.locator('#brand-hex').fill('');
+    await page.locator('#brand-hex').pressSequentially('#2456e');
+    await settle(page);
+    assert.equal(await cssVar(page, '--color-primary'), '#7c3aed');
+    await page.fill('#brand-hex', '#f80');
+    await page.press('#brand-hex', 'Enter');
+    await settle(page);
+    assert.equal(await page.locator('#scales .chip.is-anchor').getAttribute('data-copy'), '#ff8800');
+
     // rgb() and oklch() are accepted and shown back as hex once the field is left.
     await page.fill('#brand-hex', 'rgb(36, 86, 230)');
     await settle(page);
