@@ -62,6 +62,16 @@ const KEYS = { brand: 'b', tint: 't', ratio: 'r', base: 's', unit: 'u', radius: 
   success: 'hs', warning: 'hw', danger: 'hd', info: 'hi' } as const;
 
 /**
+ * Quotes an untrusted value for an error message. Control and bidi characters are
+ * escaped so a crafted link cannot drive the terminal the CLI prints to, and long
+ * values are cut short.
+ */
+export function quote(value: string): string {
+  const shown = value.length > 80 ? `${value.slice(0, 80)}…` : value;
+  return `"${shown.replace(/[\0-\x1f\x7f-\x9f\u061c\u200e\u200f\u2028-\u202e\u2066-\u2069]/g, (c) => `\\u${c.charCodeAt(0).toString(16).padStart(4, '0')}`)}"`;
+}
+
+/**
  * Validates untrusted recipe input (URL query string, CLI flags). Every field falls
  * back to its default when missing; invalid values are reported in `errors`
  * and replaced by the default, so the result is always a usable recipe.
@@ -73,7 +83,7 @@ export function parseRecipe(input: Partial<Record<keyof Recipe, string | undefin
   if (input.brand !== undefined) {
     const hex = parseColor(input.brand);
     if (hex) recipe.brand = hex;
-    else errors.push(`brand: "${input.brand}" is not a color like #7c3aed, rgb(124 58 237) or oklch(0.54 0.25 293)`);
+    else errors.push(`brand: ${quote(input.brand)} is not a color like #7c3aed, rgb(124 58 237) or oklch(0.54 0.25 293)`);
   }
   for (const key of ['tint', 'base', 'unit', 'radius', ...STATUSES] as const) {
     const raw = input[key];
@@ -82,21 +92,21 @@ export function parseRecipe(input: Partial<Record<keyof Recipe, string | undefin
     const { min, max } = LIMITS[key];
     // A plain decimal only: Number() alone would take "0x10" and " 16 ".
     if (/^-?(\d+(\.\d+)?|\.\d+)$/.test(raw) && n >= min && n <= max) recipe[key] = n;
-    else errors.push(`${key in STATUS_HUES ? `${key} hue` : key}: "${raw}" must be a number from ${min} to ${max}`);
+    else errors.push(`${key in STATUS_HUES ? `${key} hue` : key}: ${quote(raw)} must be a number from ${min} to ${max}`);
   }
   if (input.ratio !== undefined) {
     const n = Number(input.ratio);
     if ((RATIOS as readonly number[]).includes(n)) recipe.ratio = n;
-    else errors.push(`ratio: "${input.ratio}" must be one of ${RATIOS.join(', ')}`);
+    else errors.push(`ratio: ${quote(input.ratio)} must be one of ${RATIOS.join(', ')}`);
   }
   if (input.level !== undefined) {
     const level = input.level.toUpperCase();
     if (level === 'AA' || level === 'AAA') recipe.level = level;
-    else errors.push(`level: "${input.level}" must be AA or AAA`);
+    else errors.push(`level: ${quote(input.level)} must be AA or AAA`);
   }
   if (input.fix !== undefined) {
     if (input.fix === '1' || input.fix === '0') recipe.fix = input.fix === '1';
-    else errors.push(`fix: "${input.fix}" must be 1 or 0`);
+    else errors.push(`fix: ${quote(input.fix)} must be 1 or 0`);
   }
   return { recipe, errors };
 }

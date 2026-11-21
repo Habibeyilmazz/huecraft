@@ -162,3 +162,13 @@ test('CLI rejects bad input with exit code 2 and a message on stderr', () => {
   assert.equal(help.status, 0);
   assert.match(help.stdout, /^huecraft <color> \[options\]/);
 });
+
+test('cli: a crafted link cannot write terminal control or bidi characters to stderr', () => {
+  for (const link of ['?b=%1B]0;title%07%1B[2Jx', '?b=7c3aed&t=%C2%9B31m', '?b=7c3aed&lv=%E2%80%AEAA', `?b=${'z'.repeat(5000)}`]) {
+    const { status, stderr } = run(link);
+    assert.equal(status, 2);
+    assert.doesNotMatch(stderr, /[\x00-\x09\x0b-\x1f\x7f-\x9f\u202e]/, link);
+    assert.ok(stderr.length < 600, `${link.slice(0, 20)}: stderr ${stderr.length} chars`);
+  }
+  assert.match(run('?b=%1B[2J').stderr, /"\\u001b\[2J"/);
+});

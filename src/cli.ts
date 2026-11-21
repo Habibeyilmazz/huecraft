@@ -4,7 +4,7 @@
 import { parseArgs } from 'node:util';
 import { exportTokens, FORMATS, isFormat } from './core/export.ts';
 import { STATUS_HUES } from './core/scales.ts';
-import { buildTokens, hueClashes, LIMITS, parseRecipe, RATIOS, recipeInputFromParams, type Recipe } from './core/tokens.ts';
+import { buildTokens, hueClashes, LIMITS, parseRecipe, quote, RATIOS, recipeInputFromParams, type Recipe } from './core/tokens.ts';
 
 const USAGE = `huecraft <color> [options]
        huecraft <studio link> [options]
@@ -49,7 +49,7 @@ function recipeInput(arg: string): Partial<Record<keyof Recipe, string>> {
     try {
       params = new URL(arg).searchParams;
     } catch {
-      fail(`"${arg}" is not a valid link`);
+      fail(`${quote(arg)} is not a valid link`);
     }
   } else return { brand: arg };
   const input = recipeInputFromParams(params);
@@ -91,7 +91,7 @@ function main(): void {
     fail(positionals.length ? 'expected exactly one color' : 'missing color (an unquoted # starts a shell comment: write 7c3aed or quote it)');
   }
   const format = values.format.toLowerCase(); // like --level, which takes aaa as well as AAA
-  if (!isFormat(format)) fail(`unknown format "${values.format}" (use ${Object.keys(FORMATS).join(', ')})`);
+  if (!isFormat(format)) fail(`unknown format ${quote(values.format)} (use ${Object.keys(FORMATS).join(', ')})`);
 
   if (values.fix && values['no-fix']) fail('--fix and --no-fix contradict each other');
   const input = recipeInput(positionals[0]!);
