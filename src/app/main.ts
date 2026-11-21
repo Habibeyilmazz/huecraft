@@ -1,6 +1,6 @@
 import '@fontsource-variable/bricolage-grotesque/opsz.css';
 import '@fontsource-variable/jetbrains-mono/wght.css';
-import { CVD_MATRICES, formatOklch, hexToOklch, normalizeHex, oklchToHex, VISIONS, type Vision } from '../core/color.ts';
+import { CVD_MATRICES, formatOklch, hexToOklch, oklchToHex, parseColor, VISIONS, type Vision } from '../core/color.ts';
 import { exportTokens, FORMATS, isFormat, type Format } from '../core/export.ts';
 import { SCALE_NAMES, type ScaleName } from '../core/scales.ts';
 import type { Theme } from '../core/semantic.ts';
@@ -211,7 +211,7 @@ $('recipe').addEventListener('submit', (e) => e.preventDefault());
 $<HTMLInputElement>('brand-picker').addEventListener('input', (e) => change({ brand: (e.target as HTMLInputElement).value }));
 const hexInput = $<HTMLInputElement>('brand-hex');
 hexInput.addEventListener('input', () => {
-  const hex = normalizeHex(hexInput.value);
+  const hex = parseColor(hexInput.value);
   if (hex) {
     hexInput.removeAttribute('aria-invalid');
     $('brand-error').hidden = true;
@@ -220,13 +220,13 @@ hexInput.addEventListener('input', () => {
 });
 // Report a bad value once the field is committed, not on every keystroke.
 hexInput.addEventListener('change', () => {
-  const invalid = !normalizeHex(hexInput.value);
+  const invalid = !parseColor(hexInput.value);
   if (invalid) hexInput.setAttribute('aria-invalid', 'true');
   else hexInput.removeAttribute('aria-invalid');
   $('brand-error').hidden = !invalid;
 });
 hexInput.addEventListener('blur', () => {
-  if (normalizeHex(hexInput.value)) hexInput.value = state.recipe.brand;
+  if (parseColor(hexInput.value)) hexInput.value = state.recipe.brand;
 });
 $('presets').addEventListener('click', (e) => {
   const hex = (e.target as HTMLElement).closest<HTMLElement>('.preset')?.dataset.hex;

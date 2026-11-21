@@ -9,7 +9,8 @@ const USAGE = `huecraft <color> [options]
 
 Turns one brand color into a design-token set and prints it to stdout.
 
-  <color>            hex color, e.g. 7c3aed or '#7c3aed' (quote the # in a shell)
+  <color>            7c3aed, '#7c3aed', 'rgb(124 58 237)' or 'oklch(0.54 0.25 293)'
+                     (quote anything with # or brackets; colors outside sRGB are brought into it)
 
 Options
   -f, --format <f>   ${Object.keys(FORMATS).join(' | ')}   (default: css)

@@ -78,6 +78,16 @@ try {
     assert.match(page.url(), /[?&]b=7c3aed(&|$)/, 'Enter does not submit the form and reload');
     assert.equal(await cssVar(page, '--color-primary'), '#7c3aed');
 
+    // rgb() and oklch() are accepted and shown back as hex once the field is left.
+    await page.fill('#brand-hex', 'rgb(36, 86, 230)');
+    await settle(page);
+    assert.equal(await cssVar(page, '--color-primary'), '#2456e6');
+    await page.fill('#brand-hex', 'oklch(54.13% 0.2466 293.01)');
+    await page.locator('#brand-hex').blur();
+    await settle(page);
+    assert.equal(await cssVar(page, '--color-primary'), '#7c3aed');
+    assert.equal(await page.inputValue('#brand-hex'), '#7c3aed');
+
     await page.fill('#brand-hex', 'zzz');
     await page.locator('#brand-hex').blur();
     assert.equal(await page.locator('#brand-hex').getAttribute('aria-invalid'), 'true');

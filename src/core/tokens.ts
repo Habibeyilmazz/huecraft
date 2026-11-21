@@ -1,6 +1,6 @@
 // The recipe (everything a user can choose) and the token set derived from it.
 
-import { normalizeHex } from './color.ts';
+import { parseColor } from './color.ts';
 import { FONT_STACKS, radiusScale, spaceScale, typeScale, type Dimension, type TypeStep } from './dimensions.ts';
 import { buildScales, type Scales } from './scales.ts';
 import { buildTheme, type Level, type Ref, type Theme, type ThemeTokens } from './semantic.ts';
@@ -58,9 +58,9 @@ export function parseRecipe(input: Partial<Record<keyof Recipe, string | undefin
   const errors: string[] = [];
 
   if (input.brand !== undefined) {
-    const hex = normalizeHex(input.brand);
+    const hex = parseColor(input.brand);
     if (hex) recipe.brand = hex;
-    else errors.push(`brand: "${input.brand}" is not a hex color like #7c3aed`);
+    else errors.push(`brand: "${input.brand}" is not a color like #7c3aed, rgb(124 58 237) or oklch(0.54 0.25 293)`);
   }
   for (const key of ['tint', 'base', 'unit', 'radius'] as const) {
     const raw = input[key];

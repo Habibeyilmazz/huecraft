@@ -148,6 +148,35 @@ export function formatOklch(lch: Oklch): string {
   return `oklch(${round(l * 100, 2)}% ${c} ${h})`;
 }
 
+const NUMBER = /^(-?(?:\d+\.?\d*|\.\d+))(%|deg)?$/;
+/** A CSS number, or a percentage of `full`; hues may carry `deg`. NaN when it is neither. */
+function channel(part: string, full: number, unit: '%' | 'deg' = '%'): number {
+  const m = NUMBER.exec(part);
+  if (!m || (m[2] && m[2] !== unit)) return NaN;
+  return m[2] === '%' ? (Number(m[1]) / 100) * full : Number(m[1]);
+}
+
+/**
+ * Parses a brand color written as hex, `rgb(r g b)` or `oklch(l c h)` (spaces or
+ * commas, no alpha) into `#rrggbb`, or null. An oklch() color outside sRGB loses
+ * chroma until it fits, like every other color here.
+ */
+export function parseColor(input: string): string | null {
+  const hex = normalizeHex(input);
+  if (hex) return hex;
+  const m = /^(rgb|oklch)\(\s*([^()]*?)\s*\)$/i.exec(input.trim());
+  const parts = m?.[2]!.split(/\s*,\s*|\s+/);
+  if (!m || parts?.length !== 3) return null;
+  const [a, b, c] = parts as [string, string, string];
+  const rgb = m[1]!.toLowerCase() === 'rgb';
+  const values = rgb
+    ? [channel(a, 255) / 255, channel(b, 255) / 255, channel(c, 255) / 255]
+    : [channel(a, 1), channel(b, 0.4), channel(c, 0, 'deg')];
+  if (values.some(Number.isNaN)) return null;
+  const [x, y, z] = values as [number, number, number];
+  return rgb ? rgbToHex([x, y, z]) : oklchToHex({ l: x, c: Math.max(0, y), h: z });
+}
+
 // ---- Contrast -----------------------------------------------------------
 
 /** WCAG 2.x relative luminance of an sRGB hex. */

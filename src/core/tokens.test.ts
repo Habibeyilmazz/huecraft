@@ -146,6 +146,7 @@ test('untrusted recipe input is validated field by field', () => {
   });
   assert.deepEqual(recipe, DEFAULT_RECIPE, 'every invalid field falls back to its default');
   assert.equal(errors.length, 8);
+  assert.equal(parseRecipe({ brand: 'rgb(124 58 237)' }).recipe.brand, '#7c3aed');
   const ok = parseRecipe({ brand: 'ABC', level: 'aaa', tint: '0', fix: '0' });
   assert.deepEqual(ok.errors, []);
   assert.deepEqual(ok.recipe, { ...DEFAULT_RECIPE, brand: '#aabbcc', level: 'AAA', tint: 0, fix: false });

@@ -10,6 +10,7 @@ import {
   normalizeHex,
   oklchToHex,
   oklchToP3,
+  parseColor,
   simulateVision,
   wcagContrast,
 } from './color.ts';
@@ -23,6 +24,25 @@ test('normalizeHex accepts short, long and hash-less forms and rejects junk', ()
   assert.equal(normalizeHex(' #abc '), '#aabbcc');
   for (const bad of ['', '#12', '#12345', 'red', '#gggggg', '#1234567', 'javascript:alert(1)']) {
     assert.equal(normalizeHex(bad), null, bad);
+  }
+});
+
+test('parseColor reads hex, rgb() and oklch(), and rejects everything else', () => {
+  assert.equal(parseColor('7C3AED'), '#7c3aed');
+  for (const rgb of ['rgb(124, 58, 237)', 'rgb(124 58 237)', ' RGB( 124,58 ,237 ) ', 'rgb(48.63% 22.75% 92.94%)']) {
+    assert.equal(parseColor(rgb), '#7c3aed', rgb);
+  }
+  assert.equal(parseColor('rgb(300 -5 0)'), '#ff0000', 'out-of-range channels clamp, as in CSS');
+  // The studio's own readout pastes back to the color it describes.
+  for (const hex of ['#7c3aed', '#0c7c86', '#fde047', '#000000', '#ffffff']) {
+    assert.equal(parseColor(formatOklch(hexToOklch(hex))), hex);
+  }
+  assert.equal(parseColor('oklch(0.5413 0.2466 293.01deg)'), '#7c3aed');
+  assert.equal(parseColor('oklch(54.13% 61.65% 293.01)'), '#7c3aed', 'chroma 100% is 0.4');
+  assert.equal(parseColor('oklch(0.7 0.37 150)'), oklchToHex({ l: 0.7, c: 0.37, h: 150 }), 'beyond sRGB: chroma is reduced');
+  for (const bad of ['', 'red', 'rgb(1 2)', 'rgb(1 2 3 4)', 'rgb(1 2 3 / 0.5)', 'rgb(1 2 3deg)', 'rgb(a b c)', 'hsl(0 0% 0%)',
+    'oklch(0.5 0.1)', 'oklch(0.5 0.1 20%)', 'oklch(0.5 0.1 20) x', 'rgb(1 2 3', 'rgb(<img src=x>)', 'rgb(1e3 0 0)']) {
+    assert.equal(parseColor(bad), null, bad);
   }
 });
 

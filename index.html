@@ -50,12 +50,12 @@
             <div class="color-row">
               <input type="color" id="brand-picker" aria-label="Brand color picker" />
               <div class="field">
-                <label for="brand-hex" class="visually-hidden">Brand color as hex</label>
-                <input type="text" id="brand-hex" spellcheck="false" maxlength="7" aria-describedby="brand-error brand-oklch" />
+                <label for="brand-hex" class="visually-hidden">Brand color as hex, rgb() or oklch()</label>
+                <input type="text" id="brand-hex" spellcheck="false" maxlength="48" aria-describedby="brand-error brand-oklch" />
               </div>
               <button type="button" class="btn" id="random">Surprise me</button>
             </div>
-            <p class="field-error" id="brand-error" hidden>Enter a hex color like #7c3aed.</p>
+            <p class="field-error" id="brand-error" hidden>Enter a color like #7c3aed, rgb(124 58 237) or oklch(54% 0.25 293).</p>
             <p class="readout" id="brand-oklch"></p>
             <div class="mini-ramp" id="mini-ramp" aria-hidden="true"></div>
             <div class="presets" id="presets" role="group" aria-label="Starting points"></div>
