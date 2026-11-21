@@ -13,9 +13,19 @@ export interface TypeStep {
   maxPx: number;
   /** CSS value: a rem length, or a clamp() that interpolates between the two. */
   css: string;
+  /** Unitless line height for this size. */
+  lineHeight: number;
 }
 
 const rem = (px: number) => `${Math.round((px / ROOT) * 1e4) / 1e4}rem`;
+
+/**
+ * About 8px of leading at the desktop size: 1.5 for 16px body text, tightening
+ * toward 1.1 for display sizes. Never above 1.5, so small text is not airy.
+ */
+export function lineHeight(px: number): number {
+  return Math.min(1.5, Math.max(1.1, Math.round(((px + 8) / px) * 100) / 100));
+}
 
 const TYPE_STEPS = ['xs', 'sm', 'base', 'lg', 'xl', '2xl', '3xl', '4xl'] as const;
 
@@ -31,14 +41,14 @@ export function typeScale(basePx: number, ratio: number): TypeStep[] {
     const n = i - 2;
     if (n <= 0) {
       const px = Math.max(MIN_TEXT_PX, basePx * ratio ** n);
-      return { name, minPx: px, maxPx: px, css: rem(px) };
+      return { name, minPx: px, maxPx: px, css: rem(px), lineHeight: lineHeight(px) };
     }
     const minPx = basePx * smallRatio ** n;
     const maxPx = basePx * ratio ** n;
     const slope = (maxPx - minPx) / (VIEWPORT_MAX - VIEWPORT_MIN);
     const intercept = minPx - slope * VIEWPORT_MIN;
     const vw = Math.round(slope * 100 * 1e4) / 1e4;
-    return { name, minPx, maxPx, css: `clamp(${rem(minPx)}, ${rem(intercept)} + ${vw}vw, ${rem(maxPx)})` };
+    return { name, minPx, maxPx, css: `clamp(${rem(minPx)}, ${rem(intercept)} + ${vw}vw, ${rem(maxPx)})`, lineHeight: lineHeight(maxPx) };
   });
 }
 
@@ -63,6 +73,19 @@ export function radiusScale(roundness: number): Dimension[] {
     return { name, px: v, css: v === 0 ? '0' : rem(v) };
   });
   return [...scaled, { name: 'full', px: 9999, css: '9999px' }];
+}
+
+export interface Fonts {
+  sans: string;
+  heading: string;
+  mono: string;
+}
+
+/** Font stacks with the brand's own families (already validated names, '' for none) in front of the system ones. */
+export function fontStacks(body: string, heading: string): Fonts {
+  const first = (name: string) => (name ? `'${name}', ` : '');
+  const sans = first(body) + FONT_STACKS.sans;
+  return { sans, heading: first(heading) + sans, mono: FONT_STACKS.mono };
 }
 
 export const FONT_STACKS = {

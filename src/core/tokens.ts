@@ -1,7 +1,7 @@
 // The recipe (everything a user can choose) and the token set derived from it.
 
 import { hexToOklch, parseColor } from './color.ts';
-import { FONT_STACKS, radiusScale, spaceScale, typeScale, type Dimension, type TypeStep } from './dimensions.ts';
+import { fontStacks, radiusScale, spaceScale, typeScale, type Dimension, type Fonts, type TypeStep } from './dimensions.ts';
 import { buildScales, STATUS_HUES, STATUSES, type Scales, type Status } from './scales.ts';
 import { buildTheme, type Level, type Ref, type Theme, type ThemeTokens } from './semantic.ts';
 
@@ -27,6 +27,9 @@ export interface Recipe {
   warning: number;
   danger: number;
   info: number;
+  /** Font family names put in front of the system stacks, '' for none. */
+  font: string;
+  heading: string;
 }
 
 export const DEFAULT_RECIPE: Recipe = {
@@ -39,6 +42,8 @@ export const DEFAULT_RECIPE: Recipe = {
   level: 'AA',
   fix: true,
   ...STATUS_HUES,
+  font: '',
+  heading: '',
 };
 
 const HUE = { min: 0, max: 360, step: 1 } as const;
@@ -59,7 +64,17 @@ export const LIMITS = {
 
 // Short keys keep shared URLs compact.
 const KEYS = { brand: 'b', tint: 't', ratio: 'r', base: 's', unit: 'u', radius: 'rd', level: 'lv', fix: 'fx',
-  success: 'hs', warning: 'hw', danger: 'hd', info: 'hi' } as const;
+  success: 'hs', warning: 'hw', danger: 'hd', info: 'hi', font: 'f', heading: 'fh' } as const;
+
+/**
+ * A font family name as typed, tidied, or null if it could break out of a quoted CSS
+ * string, a shell argument or a comment. Letters and digits of any script, spaces,
+ * hyphens and underscores; up to 48 characters. '' means "system fonts".
+ */
+export function parseFontName(raw: string): string | null {
+  const name = raw.trim().replace(/\s+/g, ' ');
+  return name === '' || /^[\p{L}\p{N}][\p{L}\p{N} _-]{0,47}$/u.test(name) ? name : null;
+}
 
 /**
  * Quotes an untrusted value for an error message. Control and bidi characters are
@@ -104,6 +119,13 @@ export function parseRecipe(input: Partial<Record<keyof Recipe, string | undefin
     if (level === 'AA' || level === 'AAA') recipe.level = level;
     else errors.push(`level: ${quote(input.level)} must be AA or AAA`);
   }
+  for (const key of ['font', 'heading'] as const) {
+    const raw = input[key];
+    if (raw === undefined) continue;
+    const name = parseFontName(raw);
+    if (name !== null) recipe[key] = name;
+    else errors.push(`${key === 'font' ? 'font' : 'heading font'}: ${quote(raw)} must be a font family name: letters, digits, spaces and hyphens, up to 48 characters`);
+  }
   if (input.fix !== undefined) {
     if (input.fix === '1' || input.fix === '0') recipe.fix = input.fix === '1';
     else errors.push(`fix: ${quote(input.fix)} must be 1 or 0`);
@@ -122,6 +144,8 @@ export function recipeToParams(recipe: Recipe): URLSearchParams {
   p.set(KEYS.level, recipe.level);
   p.set(KEYS.fix, recipe.fix ? '1' : '0');
   for (const status of STATUSES) p.set(KEYS[status], String(recipe[status]));
+  if (recipe.font) p.set(KEYS.font, recipe.font);
+  if (recipe.heading) p.set(KEYS.heading, recipe.heading);
   return p;
 }
 
@@ -150,6 +174,8 @@ export function recipeToCommand(recipe: Recipe): string {
     `--radius ${recipe.radius}`,
     `--level ${recipe.level}`,
     ...STATUSES.filter((s) => recipe[s] !== STATUS_HUES[s]).map((s) => `--${s}-hue ${recipe[s]}`),
+    ...(recipe.font ? [`--font '${recipe.font}'`] : []), // parseFontName keeps quotes out
+    ...(recipe.heading ? [`--heading-font '${recipe.heading}'`] : []),
     ...(recipe.fix ? [] : ['--no-fix']),
   ].join(' ');
 }
@@ -171,7 +197,7 @@ export interface TokenSet {
   type: TypeStep[];
   space: Dimension[];
   radius: Dimension[];
-  fonts: typeof FONT_STACKS;
+  fonts: Fonts;
 }
 
 export function buildTokens(recipe: Recipe): TokenSet {
@@ -195,7 +221,7 @@ export function buildTokens(recipe: Recipe): TokenSet {
     type: typeScale(recipe.base, recipe.ratio),
     space: spaceScale(recipe.unit),
     radius: radiusScale(recipe.radius),
-    fonts: FONT_STACKS,
+    fonts: fontStacks(recipe.font, recipe.heading),
   };
 }
 

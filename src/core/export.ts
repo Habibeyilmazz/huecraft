@@ -38,10 +38,15 @@ const semanticDecls = (theme: ThemeTokens): string[] => [
   ...theme.tokens.map((tok) => `--color-${tok.name}: var(${refVar(tok.ref)});`),
   ...theme.shadows.map((s) => `--shadow-${s.name}: ${s.value};`),
 ];
-const dimensionDecls = (t: TokenSet): string[] => [
+// Tailwind v4 pairs a size with its line height as --text-<name>--line-height; the CSS export uses the same names.
+const typeDecls = (t: TokenSet): string[] => [
   `--font-sans: ${t.fonts.sans};`,
+  `--font-heading: ${t.fonts.heading};`,
   `--font-mono: ${t.fonts.mono};`,
-  ...t.type.map((s) => `--text-${s.name}: ${s.css};`),
+  ...t.type.flatMap((s) => [`--text-${s.name}: ${s.css};`, `--text-${s.name}--line-height: ${s.lineHeight};`]),
+];
+const dimensionDecls = (t: TokenSet): string[] => [
+  ...typeDecls(t),
   ...t.space.map((s) => `--space-${s.name}: ${s.css};`),
   ...t.radius.map((r) => `--radius-${r.name}: ${r.css};`),
 ];
@@ -102,9 +107,7 @@ ${lines(primitiveDecls(t))}
 
 ${lines(semanticDecls(t.themes.light))}
 
-  --font-sans: ${t.fonts.sans};
-  --font-mono: ${t.fonts.mono};
-${lines(t.type.map((s) => `--text-${s.name}: ${s.css};`))}
+${lines(typeDecls(t))}
   --spacing: ${t.space.find((s) => s.name === '1')!.css};
 ${lines(t.radius.map((r) => `--radius-${r.name}: ${r.css};`))}
 }
@@ -156,7 +159,7 @@ function json(t: TokenSet): string {
     })),
     fontFamily: {
       $type: 'fontFamily',
-      ...group(Object.entries(t.fonts), ([name]) => name, ([, stack]) => ({
+      ...group(Object.entries(t.fonts), ([name]) => name, ([, stack]: [string, string]) => ({
         $value: stack.split(',').map((f) => f.trim().replace(/^'|'$/g, '')),
       })),
     },
@@ -164,6 +167,11 @@ function json(t: TokenSet): string {
       $type: 'dimension',
       $description: 'Values are the desktop sizes; the fluid clamp() is in $extensions.',
       ...group(t.type, (s) => s.name, (s) => ({ ...dtcgDimension(s.maxPx), $extensions: { 'huecraft.fluid': s.css } })),
+    },
+    lineHeight: {
+      $type: 'number',
+      $description: 'Unitless, for the fontSize token of the same name.',
+      ...group(t.type, (s) => s.name, (s) => ({ $value: s.lineHeight })),
     },
     space: { $type: 'dimension', ...group(t.space, (s) => s.name, (s) => dtcgDimension(s.px)) },
     radius: {
@@ -191,7 +199,7 @@ function json(t: TokenSet): string {
 function figma(t: TokenSet): string {
   const variables: object[] = [];
   const values: object[] = [];
-  const add = (collection: string, name: string, type: 'COLOR' | 'FLOAT', byMode: [string, unknown][]) => {
+  const add = (collection: string, name: string, type: 'COLOR' | 'FLOAT' | 'STRING', byMode: [string, unknown][]) => {
     const id = `${collection}/${name}`;
     variables.push({ action: 'CREATE', id, name, variableCollectionId: collection, resolvedType: type });
     for (const [modeId, value] of byMode) values.push({ variableId: id, modeId, value });
@@ -207,6 +215,11 @@ function figma(t: TokenSet): string {
   }
   add('primitives', 'white', 'COLOR', [['primitives-value', rgba('#ffffff')]]);
   for (const s of t.type) add('primitives', `font-size/${s.name}`, 'FLOAT', [['primitives-value', round(s.maxPx, 2)]]);
+  // Figma line heights are in px, not a multiple of the size.
+  for (const s of t.type) add('primitives', `line-height/${s.name}`, 'FLOAT', [['primitives-value', round(s.maxPx * s.lineHeight, 2)]]);
+  // A Figma font family is one name, so only a brand font becomes a variable; the system stacks have no equivalent.
+  if (t.recipe.font) add('primitives', 'font-family/sans', 'STRING', [['primitives-value', t.recipe.font]]);
+  if (t.recipe.heading) add('primitives', 'font-family/heading', 'STRING', [['primitives-value', t.recipe.heading]]);
   // Figma variable names may not contain a dot, so half steps stay as 0_5 and 1_5.
   for (const s of t.space) add('primitives', `space/${s.name}`, 'FLOAT', [['primitives-value', s.px]]);
   for (const r of t.radius) add('primitives', `radius/${r.name}`, 'FLOAT', [['primitives-value', r.px]]);
@@ -260,8 +273,10 @@ ${theme(t.themes.light)}
 ${theme(t.themes.dark)}
 
 $font-sans: ${t.fonts.sans};
+$font-heading: ${t.fonts.heading};
 $font-mono: ${t.fonts.mono};
 ${map('text', t.type.map((s) => `'${s.name}': ${s.css},`))}
+${map('line-height', t.type.map((s) => `'${s.name}': ${s.lineHeight},`))}
 ${map('space', t.space.map((s) => `'${s.name.replace('_', '-')}': ${s.css},`))}
 ${map('radius', t.radius.map((r) => `'${r.name}': ${r.css},`))}
 `;

@@ -1,9 +1,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { hexToOklch, luminance, luminanceContrast, oklchLuminance, oklchToHex, wcagContrast } from './color.ts';
-import { radiusScale, spaceScale, typeScale, VIEWPORT_MAX, VIEWPORT_MIN } from './dimensions.ts';
+import { lineHeight, radiusScale, spaceScale, typeScale, VIEWPORT_MAX, VIEWPORT_MIN } from './dimensions.ts';
 import { brandScale, buildScales, neutralScale, STEPS } from './scales.ts';
-import { buildTokens, DEFAULT_RECIPE, hueClashes, parseRecipe, recipeFromParams, recipeToCommand, recipeToParams } from './tokens.ts';
+import { buildTokens, DEFAULT_RECIPE, hueClashes, parseFontName, parseRecipe, recipeFromParams, recipeToCommand, recipeToParams } from './tokens.ts';
 
 // A spread of brand colors: every 30° of hue at three lightness levels, plus the awkward ones.
 const BRANDS = [
@@ -134,7 +134,7 @@ test('space and radius scales', () => {
 
 test('recipes round-trip through URL params', () => {
   const recipe = { brand: '#7c3aed', tint: 0.65, ratio: 1.333, base: 18, unit: 4.5, radius: 0.25, level: 'AAA', fix: false,
-    success: 140, warning: 90, danger: 0, info: 220.5 } as const;
+    success: 140, warning: 90, danger: 0, info: 220.5, font: 'Source Sans 3', heading: 'Noto Serif JP' } as const;
   const { recipe: back, errors } = recipeFromParams(new URLSearchParams(recipeToParams(recipe).toString()));
   assert.deepEqual(errors, []);
   assert.deepEqual(back, recipe);
@@ -204,4 +204,40 @@ test('numbers must be plain decimals: hex, padding and exponents are rejected th
   assert.equal(parseRecipe({ base: '1'.repeat(200_000) + 'x' }).errors.length, 1);
   assert.ok(performance.now() - t0 < 500, 'a long digit run does not backtrack');
   assert.deepEqual(parseRecipe({ base: '17.5', radius: '.5', success: '0' }).errors, []);
+});
+
+test('line heights: 1.5 for body text, tighter as type grows, never outside 1.1..1.5', () => {
+  assert.equal(lineHeight(16), 1.5);
+  assert.equal(lineHeight(12), 1.5, 'small text is not set looser than body text');
+  assert.equal(lineHeight(32), 1.25);
+  assert.equal(lineHeight(200), 1.1);
+  for (const [base, ratio] of [[14, 1.067], [16, 1.25], [20, 1.5]] as const) {
+    const lh = typeScale(base, ratio).map((s) => s.lineHeight);
+    assert.ok(lh.every((v, i) => v >= 1.1 && v <= 1.5 && (i === 0 || v <= lh[i - 1]!)), `${base}px ${ratio}: ${lh}`);
+  }
+});
+
+test('font names are validated, and a brand font goes in front of the system stack', () => {
+  assert.equal(parseFontName('  Source   Sans 3 '), 'Source Sans 3');
+  assert.equal(parseFontName(''), '');
+  assert.equal(parseFontName('Noto Sans JP'), 'Noto Sans JP');
+  assert.equal(parseFontName('游ゴシック'), '游ゴシック', 'names in any script');
+  for (const bad of ["Inter'; } body { color: red", 'Inter, Arial', 'a*/b', '"Inter"', '-dash-first', 'x'.repeat(49), 'In\u202eter']) {
+    assert.equal(parseFontName(bad), null, bad);
+  }
+  const { recipe, errors } = parseRecipe({ font: 'Inter;', heading: 'Fraunces' });
+  assert.equal(recipe.font, '');
+  assert.equal(recipe.heading, 'Fraunces');
+  assert.match(errors[0]!, /^font: "Inter;" must be a font family name/);
+
+  const fonts = buildTokens({ ...DEFAULT_RECIPE, font: 'Inter', heading: 'Fraunces' }).fonts;
+  assert.match(fonts.sans, /^'Inter', system-ui, /);
+  assert.match(fonts.heading, /^'Fraunces', 'Inter', system-ui, /, 'headings fall back to the body font');
+  const plain = buildTokens(DEFAULT_RECIPE).fonts;
+  assert.equal(plain.heading, plain.sans);
+  assert.match(plain.sans, /^system-ui, /);
+
+  assert.ok(!recipeToParams(DEFAULT_RECIPE).has('f'), 'no font, no parameter');
+  assert.equal(recipeToCommand({ ...DEFAULT_RECIPE, font: 'Source Sans 3', heading: 'Fraunces' }),
+    "huecraft 0c7c86 --tint 0.3 --ratio 1.25 --base 16 --unit 4 --radius 1 --level AA --font 'Source Sans 3' --heading-font 'Fraunces'");
 });

@@ -93,6 +93,36 @@ test('every format is non-empty and isFormat guards the names', () => {
   assert.equal(isFormat('xml'), false);
 });
 
+test('fonts and line heights reach every format, and the recreate command brings the fonts back', () => {
+  const typed = buildTokens({ ...DEFAULT_RECIPE, brand: '#7c3aed', font: 'Source Sans 3', heading: 'Fraunces' });
+  const css = exportTokens(typed, 'css');
+  assert.match(css, /--font-sans: 'Source Sans 3', system-ui,/);
+  assert.match(css, /--font-heading: 'Fraunces', 'Source Sans 3', system-ui,/);
+  assert.match(css, /--text-base: 1rem;\n {2}--text-base--line-height: 1\.5;/);
+  assert.match(css, /^\/\* .* --font 'Source Sans 3' --heading-font 'Fraunces' \*\/$/m);
+  const tw = exportTokens(typed, 'tailwind');
+  assert.match(tw, /--text-4xl--line-height: 1\.16;/, 'Tailwind applies it with text-4xl');
+  assert.match(tw, /--font-heading: 'Fraunces',/);
+
+  const doc = JSON.parse(exportTokens(typed, 'json'));
+  assert.deepEqual(doc.fontFamily.heading.$value.slice(0, 3), ['Fraunces', 'Source Sans 3', 'system-ui']);
+  assert.deepEqual(doc.lineHeight.base, { $value: 1.5 });
+  assert.equal(doc.lineHeight.$type, 'number');
+
+  const figma = JSON.parse(exportTokens(typed, 'figma'));
+  const value = (id: string) => figma.variableModeValues.find((m: { variableId: string }) => m.variableId === id)?.value;
+  assert.equal(value('primitives/line-height/base'), 24, 'px, as Figma wants');
+  assert.equal(value('primitives/font-family/sans'), 'Source Sans 3');
+  assert.equal(value('primitives/font-family/heading'), 'Fraunces');
+  assert.equal(figma.variables.find((v: { id: string }) => v.id === 'primitives/font-family/sans').resolvedType, 'STRING');
+  const plainFigma = JSON.parse(exportTokens(tokens, 'figma'));
+  assert.ok(!plainFigma.variables.some((v: { id: string }) => v.id.includes('font-family')), 'no brand font, no font variable');
+
+  const scss = exportTokens(typed, 'scss');
+  assert.match(scss, /\$font-heading: 'Fraunces',/);
+  assert.match(scss, /\$line-height: \(\n {2}'xs': 1\.5,/);
+});
+
 const CLI = fileURLToPath(new URL('../cli.ts', import.meta.url));
 const run = (...args: string[]) => spawnSync(process.execPath, [CLI, ...args], { encoding: 'utf8' });
 
@@ -148,6 +178,15 @@ test('CLI takes a studio link or its query string, and options override the link
     assert.equal(result.stdout, '');
     assert.match(result.stderr, message);
   }
+});
+
+test('CLI takes --font and --heading-font, alone or over a link, and refuses unsafe names', () => {
+  const expected = exportTokens(buildTokens({ ...DEFAULT_RECIPE, brand: '#7c3aed', font: 'Source Sans 3', heading: 'Fraunces' }), 'css');
+  assert.equal(execFileSync(process.execPath, [CLI, '7c3aed', '--font', 'Source Sans 3', '--heading-font', 'Fraunces'], { encoding: 'utf8' }), expected);
+  assert.equal(execFileSync(process.execPath, [CLI, '?b=7c3aed&f=Inter&fh=Fraunces', '--font', 'Source Sans 3'], { encoding: 'utf8' }), expected);
+  const bad = run('7c3aed', '--font', "Inter'; }");
+  assert.equal(bad.status, 2);
+  assert.match(bad.stderr, /font: "Inter'; }" must be a font family name/);
 });
 
 test('CLI rejects bad input with exit code 2 and a message on stderr', () => {

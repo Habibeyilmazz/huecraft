@@ -24,6 +24,9 @@ Options
       --unit <px>    spacing unit, ${LIMITS.unit.min}..${LIMITS.unit.max}   (default: 4)
       --radius <n>   corner roundness, ${LIMITS.radius.min}..${LIMITS.radius.max}   (default: 1)
       --level <l>    WCAG contrast target, AA | AAA   (default: AA)
+      --font <name>  your body font family, put in front of the system fonts   (default: none)
+      --heading-font <name>
+                     your heading font family; headings fall back to the body font   (default: none)
       --success-hue <deg>, --warning-hue <deg>, --danger-hue <deg>, --info-hue <deg>
                      OKLCH hue of a status scale, 0..360
                      (defaults: ${Object.entries(STATUS_HUES).map(([s, h]) => `${s} ${h}`).join(', ')})
@@ -33,6 +36,7 @@ Options
 
 Examples
   huecraft 7c3aed --format tailwind > theme.css
+  huecraft 7c3aed --font 'Source Sans 3' --heading-font Fraunces
   huecraft 'https://example.com/huecraft/?b=7c3aed&t=0.5&th=dark' --format scss
 `;
 
@@ -70,6 +74,8 @@ function main(): void {
         unit: { type: 'string' },
         radius: { type: 'string' },
         level: { type: 'string' },
+        font: { type: 'string' },
+        'heading-font': { type: 'string' },
         'success-hue': { type: 'string' },
         'warning-hue': { type: 'string' },
         'danger-hue': { type: 'string' },
@@ -107,6 +113,8 @@ function main(): void {
     warning: values['warning-hue'],
     danger: values['danger-hue'],
     info: values['info-hue'],
+    font: values.font,
+    heading: values['heading-font'],
   };
   for (const [key, value] of Object.entries(flags) as [keyof Recipe, string | undefined][]) {
     if (value !== undefined) input[key] = value;
