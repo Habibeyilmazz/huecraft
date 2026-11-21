@@ -152,6 +152,25 @@ try {
     await close();
   });
 
+  await check('a status hue close to the brand is flagged; moving it rebuilds the scale, the URL and the export', async () => {
+    const { page, close } = await open('?b=dc2626');
+    assert.match(await page.locator('#hue-note').innerText(), /^Danger is 2° from your brand/);
+    assert.match(await page.locator('#scales').innerText(), /Hue 25°\. Close to the brand\./);
+    const before = await cssVar(page, '--color-danger-600');
+    await page.locator('#hue-danger').fill('350');
+    await settle(page);
+    assert.notEqual(await cssVar(page, '--color-danger-600'), before);
+    assert.equal(await page.locator('#hue-danger-out').innerText(), '350°');
+    assert.equal(await page.locator('#hue-note').innerText(), '');
+    assert.match(page.url(), /[?&]hd=350(&|$)/);
+    await page.click('#tab-export');
+    assert.match(await page.locator('#code').innerText(), /--danger-hue 350 \*\//);
+    await page.click('#reset');
+    await settle(page);
+    assert.equal(await page.inputValue('#hue-danger'), '25');
+    await close();
+  });
+
   await check('theme switch restyles the preview instantly', async () => {
     const { page, close } = await open('?tab=preview&th=light');
     const bg = () => page.evaluate(() => getComputedStyle(document.querySelector('.pv')).backgroundColor);

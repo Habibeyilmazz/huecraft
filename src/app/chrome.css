@@ -396,6 +396,24 @@ input[type='color']::-moz-color-swatch {
   accent-color: var(--c-ink);
   cursor: pointer;
 }
+/* A dot of the status color itself, so moving a hue shows where it landed. */
+.hue-out::before {
+  content: '';
+  display: inline-block;
+  width: 0.75em;
+  height: 0.75em;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: var(--dot);
+  vertical-align: -0.05em;
+}
+.hue-note:not(:empty) {
+  margin-top: 14px;
+  line-height: 1.4;
+}
+.hue-note strong {
+  font-weight: 650;
+}
 .select-row {
   display: flex;
   align-items: center;
@@ -1097,7 +1115,8 @@ input[type='color']::-moz-color-swatch {
   .dot,
   .sample,
   .mx-sample,
-  .pv {
+  .pv,
+  .hue-out::before {
     forced-color-adjust: none;
   }
   .seg input:checked + span,

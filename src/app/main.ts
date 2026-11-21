@@ -2,10 +2,10 @@ import '@fontsource-variable/bricolage-grotesque/opsz.css';
 import '@fontsource-variable/jetbrains-mono/wght.css';
 import { CVD_MATRICES, formatOklch, hexToOklch, oklchToHex, parseColor, VISIONS, type Vision } from '../core/color.ts';
 import { exportTokens, FORMATS, isFormat, type Format } from '../core/export.ts';
-import { SCALE_NAMES, type ScaleName } from '../core/scales.ts';
+import { SCALE_NAMES, STATUSES, type ScaleName } from '../core/scales.ts';
 import type { Theme } from '../core/semantic.ts';
 import {
-  buildTokens, DEFAULT_RECIPE, LIMITS, RATIOS, recipeFromParams, recipeToParams, type Recipe, type TokenSet,
+  buildTokens, CLASH_DEGREES, DEFAULT_RECIPE, hueClashes, LIMITS, RATIOS, recipeFromParams, recipeToParams, type Recipe, type TokenSet,
 } from '../core/tokens.ts';
 import { PREVIEW_HTML } from './preview.ts';
 import { renderCode, renderContrast, renderPalette, renderScale } from './views.ts';
@@ -92,6 +92,11 @@ for (const key of ['tint', 'base', 'unit', 'radius'] as const) {
   Object.assign(input, { min: LIMITS[key].min, max: LIMITS[key].max, step: LIMITS[key].step });
   input.addEventListener('input', () => change({ [key]: Number(input.value) }));
 }
+for (const status of STATUSES) {
+  const input = $<HTMLInputElement>(`hue-${status}`);
+  Object.assign(input, { min: LIMITS[status].min, max: LIMITS[status].max, step: LIMITS[status].step });
+  input.addEventListener('input', () => change({ [status]: Number(input.value) }));
+}
 $('ratio').innerHTML = RATIOS.map((r, i) => `<option value="${r}">${r} ${RATIO_NAMES[i]}</option>`).join('');
 $('presets').innerHTML = PRESETS.map(([name, hex]) =>
   `<button type="button" class="preset" data-hex="${hex}" style="background:${hex}" aria-label="${name}, ${hex}" title="${name}"></button>`).join('');
@@ -148,6 +153,14 @@ function syncControls(): void {
   $<HTMLInputElement>('radius').value = String(recipe.radius);
   $('radius-out').textContent = `${Math.round(recipe.radius * 100)}%`;
   $<HTMLSelectElement>('ratio').value = String(recipe.ratio);
+  for (const status of STATUSES) {
+    $<HTMLInputElement>(`hue-${status}`).value = String(recipe[status]);
+    $(`hue-${status}-out`).textContent = `${recipe[status]}°`;
+  }
+  // Only fixed words and numbers go into this HTML.
+  const clashes = hueClashes(recipe).map(({ a, b, degrees }) =>
+    `<strong>${b[0]!.toUpperCase() + b.slice(1)} is ${degrees}° from ${a === 'brand' ? 'your brand' : a}</strong> and may be mistaken for it.`);
+  $('hue-note').innerHTML = clashes.length ? `${clashes.join(' ')} Keep hues at least ${CLASH_DEGREES}° apart.` : '';
   $<HTMLInputElement>('fix').checked = recipe.fix;
   for (const r of radios('level')) r.checked = r.value === recipe.level;
   for (const r of radios('theme')) r.checked = r.value === state.theme;

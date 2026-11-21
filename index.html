@@ -74,7 +74,7 @@
           </fieldset>
 
           <details class="more" id="more" open>
-          <summary>Neutrals, type, shape and contrast</summary>
+          <summary>Neutrals, status hues, type, shape and contrast</summary>
           <fieldset class="group">
             <legend>Neutrals</legend>
             <div class="slider">
@@ -82,6 +82,31 @@
               <output for="tint" id="tint-out"></output>
               <input type="range" id="tint" />
             </div>
+          </fieldset>
+
+          <fieldset class="group">
+            <legend>Status hues</legend>
+            <div class="slider">
+              <label for="hue-success">Success</label>
+              <output for="hue-success" id="hue-success-out" class="hue-out" style="--dot: var(--color-success-600)"></output>
+              <input type="range" id="hue-success" aria-describedby="hue-note" />
+            </div>
+            <div class="slider">
+              <label for="hue-warning">Warning</label>
+              <output for="hue-warning" id="hue-warning-out" class="hue-out" style="--dot: var(--color-warning-600)"></output>
+              <input type="range" id="hue-warning" aria-describedby="hue-note" />
+            </div>
+            <div class="slider">
+              <label for="hue-danger">Danger</label>
+              <output for="hue-danger" id="hue-danger-out" class="hue-out" style="--dot: var(--color-danger-600)"></output>
+              <input type="range" id="hue-danger" aria-describedby="hue-note" />
+            </div>
+            <div class="slider">
+              <label for="hue-info">Info</label>
+              <output for="hue-info" id="hue-info-out" class="hue-out" style="--dot: var(--color-info-600)"></output>
+              <input type="range" id="hue-info" aria-describedby="hue-note" />
+            </div>
+            <p class="hue-note" id="hue-note"></p>
           </fieldset>
 
           <fieldset class="group">

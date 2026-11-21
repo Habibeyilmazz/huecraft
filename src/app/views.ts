@@ -3,9 +3,9 @@
 
 import { wcagContrast } from '../core/color.ts';
 import { VIEWPORT_MAX, VIEWPORT_MIN } from '../core/dimensions.ts';
-import { STEPS, SCALE_NAMES, type Scale, type ScaleName } from '../core/scales.ts';
+import { STEPS, SCALE_NAMES, type Scale, type ScaleName, type Status } from '../core/scales.ts';
 import { refLabel, refVar, textMin, type PairCheck, type Ref, type SemanticToken, type Theme } from '../core/semantic.ts';
-import type { TokenSet } from '../core/tokens.ts';
+import { hueClashes, type TokenSet } from '../core/tokens.ts';
 
 const el = (id: string) => document.getElementById(id)!;
 const esc = (s: string) => s.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
@@ -28,7 +28,9 @@ function scaleNote(scale: Scale, tokens: TokenSet): string {
     const grey = scale.swatches.every((s) => s.lch.c < 0.001);
     return grey ? 'Pure grey.' : `Tinted ${Math.round(tokens.recipe.tint * 100)}% toward the brand hue.`;
   }
-  return `Hue ${Math.round(scale.swatches[5]!.lch.h)}°, fixed.`;
+  const near = hueClashes(tokens.recipe).find((c) => c.b === scale.name || c.a === scale.name);
+  const other = near && (near.b === scale.name ? near.a : near.b);
+  return `Hue ${tokens.recipe[scale.name as Status]}°.${other ? ` Close to ${other === 'brand' ? 'the brand' : other}.` : ''}`;
 }
 
 export function renderPalette(tokens: TokenSet): void {
