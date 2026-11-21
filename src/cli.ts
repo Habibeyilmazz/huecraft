@@ -28,6 +28,7 @@ Options
                      OKLCH hue of a status scale, 0..360
                      (defaults: ${Object.entries(STATUS_HUES).map(([s, h]) => `${s} ${h}`).join(', ')})
       --no-fix       keep preferred steps even where they miss the contrast target
+      --fix          turn fixing back on when a studio link says fx=0
   -h, --help         show this help
 
 Examples
@@ -74,6 +75,7 @@ function main(): void {
         'danger-hue': { type: 'string' },
         'info-hue': { type: 'string' },
         'no-fix': { type: 'boolean', default: false },
+        fix: { type: 'boolean', default: false },
         help: { type: 'boolean', short: 'h', default: false },
       },
     });
@@ -88,6 +90,7 @@ function main(): void {
   if (positionals.length !== 1) fail(positionals.length ? 'expected exactly one color' : 'missing color');
   if (!isFormat(values.format)) fail(`unknown format "${values.format}" (use ${Object.keys(FORMATS).join(', ')})`);
 
+  if (values.fix && values['no-fix']) fail('--fix and --no-fix contradict each other');
   const input = recipeInput(positionals[0]!);
   const flags: Partial<Record<keyof Recipe, string | undefined>> = {
     tint: values.tint,
@@ -96,7 +99,7 @@ function main(): void {
     unit: values.unit,
     radius: values.radius,
     level: values.level,
-    fix: values['no-fix'] ? '0' : undefined,
+    fix: values['no-fix'] ? '0' : values.fix ? '1' : undefined,
     success: values['success-hue'],
     warning: values['warning-hue'],
     danger: values['danger-hue'],

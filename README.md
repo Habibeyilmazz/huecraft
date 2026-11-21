@@ -107,6 +107,7 @@ huecraft <studio link> [options]
                      OKLCH hue of a status scale, 0..360
                      (defaults: success 150, warning 75, danger 25, info 245)
       --no-fix       keep preferred steps even where they miss the contrast target
+      --fix          turn fixing back on when a studio link says fx=0
 ```
 
 The CSS, Tailwind and SCSS output starts with a comment holding the command that recreates it; the design-tokens
