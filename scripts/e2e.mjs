@@ -64,6 +64,32 @@ try {
     await close();
   });
 
+  await check('the content security policy blocks injected script, and every tab renders under it', async () => {
+    const { page, errors, close } = await open();
+    for (const tab of ['preview', 'contrast', 'scale', 'export']) {
+      await page.click(`#tab-${tab}`);
+      await settle(page);
+    }
+    assert.deepEqual(errors, [], 'the studio itself breaks no rule of its policy');
+    const ran = await page.evaluate(async () => {
+      const img = Object.assign(document.createElement('img'), { src: 'data:,' });
+      img.setAttribute('onerror', 'window.__pwned = 1');
+      document.body.append(img, Object.assign(document.createElement('script'), { textContent: 'window.__pwned = 1' }));
+      await new Promise((r) => setTimeout(r, 100));
+      return 'pwned' in window || '__pwned' in window;
+    });
+    assert.equal(ran, false);
+    await close();
+  });
+
+  await check('a hostile color in a shared link loads quickly with the default recipe', async () => {
+    const start = Date.now();
+    const { page, close } = await open(`?b=${encodeURIComponent(`rgb(${' '.repeat(5000)}x`)}`);
+    assert.equal(await page.locator('#scales .chip.is-anchor').getAttribute('data-copy'), '#0c7c86');
+    assert.ok(Date.now() - start < 5000, `took ${Date.now() - start} ms`);
+    await close();
+  });
+
   await check('typing a brand color rebuilds the tokens and the URL; junk is rejected with a message', async () => {
     const { page, close } = await open();
     await page.fill('#brand-hex', '#7c3aed');
@@ -249,7 +275,8 @@ try {
   await check('no axe violations in any tab, either theme', async () => {
     for (const theme of ['light', 'dark']) {
       for (const tab of ['palette', 'preview', 'contrast', 'scale', 'export']) {
-        const { page, close } = await open(`?tab=${tab}&th=${theme}`);
+        // axe is injected as an inline script, which the page's policy rightly refuses.
+        const { page, close } = await open(`?tab=${tab}&th=${theme}`, undefined, { bypassCSP: true });
         await page.addScriptTag({ path: axePath });
         // The contrast samples show deliberately unreadable pairs; that is their job.
         const result = await page.evaluate(() => window.axe.run({ exclude: ['#matrix .mx-sample', '#pairs-table .sample'] }).then((r) => r.violations));
