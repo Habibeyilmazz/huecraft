@@ -5,6 +5,20 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Performance and accessibility pass
+
+- **Added: `--fix` in the CLI**, the counterpart of `--no-fix`, so a link carrying `fx=0` can be turned back on
+  (`--fix` with `--no-fix` exits 2). Test added; 37 unit tests pass.
+- **Measured, nothing to fix.** Production build served locally, Chromium, 1280x800, no throttling: JS 41.8 kB
+  (16.3 kB gzip), CSS 30.5 kB (9.0 kB gzip), two font files fetched (latin subsets, 117 kB), 119 kB over the wire in
+  total. First contentful paint 32 ms, largest contentful paint 52 ms, layout shift 0.008, a "Surprise me" click
+  to next paint 11 ms. Accessibility is already covered by the axe checks in `npm run e2e`. Not run: Lighthouse
+  itself, network or CPU throttling, other browsers.
+- Unused code: no unused dependencies (axe-core and playwright are used by e2e). A handful of exports are used only
+  inside their own file; left alone, as removing them changes nothing at run time.
+- Still open, not code bugs: Pages workflow never run and no homepage set (owner enables Pages); Figma JSON never
+  imported; only Chromium; no social image.
+
 ### Feature round: studio link to CLI, and back
 
 - **Added: the CLI takes a studio link.** `huecraft '<link from Copy link>' --format scss` (or just the `?query`
