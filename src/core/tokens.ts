@@ -115,13 +115,18 @@ export function recipeToParams(recipe: Recipe): URLSearchParams {
   return p;
 }
 
-export function recipeFromParams(params: URLSearchParams): { recipe: Recipe; errors: string[] } {
+/** The recipe fields a shared link sets, unvalidated (for `parseRecipe`). Other parameters are ignored. */
+export function recipeInputFromParams(params: URLSearchParams): Partial<Record<keyof Recipe, string>> {
   const input: Partial<Record<keyof Recipe, string>> = {};
   for (const [field, key] of Object.entries(KEYS) as [keyof Recipe, string][]) {
     const value = params.get(key);
     if (value !== null) input[field] = value;
   }
-  return parseRecipe(input);
+  return input;
+}
+
+export function recipeFromParams(params: URLSearchParams): { recipe: Recipe; errors: string[] } {
+  return parseRecipe(recipeInputFromParams(params));
 }
 
 /** The CLI invocation that reproduces a recipe; printed in export headers. */

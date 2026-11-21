@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { exportTokens, FORMATS, isFormat } from './export.ts';
-import { buildTokens, DEFAULT_RECIPE } from './tokens.ts';
+import { buildTokens, DEFAULT_RECIPE, recipeToParams } from './tokens.ts';
 
 const tokens = buildTokens({ ...DEFAULT_RECIPE, brand: '#7c3aed' });
 
@@ -117,6 +117,28 @@ test('CLI status hue flags change the scales; a clash is a note on stderr, not a
   const bad = run('7c3aed', '--info-hue=-1');
   assert.equal(bad.status, 2);
   assert.match(bad.stderr, /info hue: "-1" must be a number from 0 to 360/);
+});
+
+test('CLI takes a studio link or its query string, and options override the link', () => {
+  const recipe = { ...DEFAULT_RECIPE, brand: '#7c3aed', tint: 0.5, ratio: 1.333, level: 'AAA' as const, fix: false, danger: 10 };
+  const query = `?${recipeToParams(recipe)}&th=dark&cv=protanopia&tab=export`;
+  const expected = exportTokens(buildTokens(recipe), 'css');
+  assert.equal(run(`https://example.com/huecraft/${query}`).stdout, expected);
+  assert.equal(run(`HTTP://localhost:4140/${query}#x`).stdout, expected);
+  assert.equal(run(query).stdout, expected);
+  assert.equal(run(query, '--tint', '0.1', '--level', 'AA').stdout, exportTokens(buildTokens({ ...recipe, tint: 0.1, level: 'AA' }), 'css'));
+  // Fields the link leaves out take their defaults, like in the studio.
+  assert.equal(run('?b=7c3aed', '-f', 'scss').stdout, exportTokens(tokens, 'scss'));
+  for (const [link, message] of [
+    ['https://example.com/?t=0.5', /no brand color/],
+    ['?b=7c3aed&t=9', /tint: "9" must be a number from 0 to 1/],
+    ['http://[nope/?b=7c3aed', /is not a valid link/],
+  ] as const) {
+    const result = run(link);
+    assert.equal(result.status, 2, link);
+    assert.equal(result.stdout, '');
+    assert.match(result.stderr, message);
+  }
 });
 
 test('CLI rejects bad input with exit code 2 and a message on stderr', () => {
