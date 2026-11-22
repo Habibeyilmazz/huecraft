@@ -5,6 +5,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Examples use the teal default
+
+- The README, the CLI help and examples, the bad-color messages (CLI and studio) and the bug report template now show
+  the default brand color `#0c7c86`, as `rgb(12 124 134)` and `oklch(0.536 0.0892 204.98)`, instead of violet
+  `#7c3aed`. The dark preview screenshot and `docs/demo.gif` are re-recorded with the teal brand.
+
 ### Performance and accessibility pass (round 16)
 
 Re-measured after the font and shadcn rounds; nothing worth changing, so no code changed.

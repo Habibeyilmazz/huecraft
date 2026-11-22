@@ -11,7 +11,7 @@ const USAGE = `huecraft <color> [options]
 
 Turns one brand color into a design-token set and prints it to stdout.
 
-  <color>            7c3aed, '#7c3aed', 'rgb(124 58 237)' or 'oklch(0.54 0.25 293)'
+  <color>            0c7c86, '#0c7c86', 'rgb(12 124 134)' or 'oklch(0.536 0.0892 204.98)'
                      (quote anything with # or brackets; colors outside sRGB are brought into it)
   <studio link>      a link from the studio's "Copy link", or just its ?query part, in quotes;
                      its recipe is used and any option below overrides it
@@ -35,9 +35,9 @@ Options
   -h, --help         show this help
 
 Examples
-  huecraft 7c3aed --format tailwind > theme.css
-  huecraft 7c3aed --font 'Source Sans 3' --heading-font Fraunces
-  huecraft 'https://example.com/huecraft/?b=7c3aed&t=0.5&th=dark' --format scss
+  huecraft 0c7c86 --format tailwind > theme.css
+  huecraft 0c7c86 --font 'Source Sans 3' --heading-font Fraunces
+  huecraft 'https://example.com/huecraft/?b=0c7c86&t=0.5&th=dark' --format scss
 `;
 
 function fail(message: string): never {
@@ -94,7 +94,7 @@ function main(): void {
     return;
   }
   if (positionals.length !== 1) {
-    fail(positionals.length ? 'expected exactly one color' : 'missing color (an unquoted # starts a shell comment: write 7c3aed or quote it)');
+    fail(positionals.length ? 'expected exactly one color' : 'missing color (an unquoted # starts a shell comment: write 0c7c86 or quote it)');
   }
   const format = values.format.toLowerCase(); // like --level, which takes aaa as well as AAA
   if (!isFormat(format)) fail(`unknown format ${quote(values.format)} (use ${Object.keys(FORMATS).join(', ')})`);

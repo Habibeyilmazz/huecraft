@@ -14,10 +14,10 @@ let n = 0;
 const frame = async (hold = 1) => {
   for (let i = 0; i < hold; i++) await page.screenshot({ path: `${dir}/f${String(n++).padStart(3, '0')}.png` });
 };
-await page.goto(`${base}?b=7c3aed&tab=palette`);
+await page.goto(`${base}?b=0c7c86&tab=palette`);
 await page.waitForSelector('#scales .chip');
 await frame(6);
-for (const hex of ['#0c7c86', '#d9480f', '#2f9e44', '#7c3aed']) {
+for (const hex of ['#d9480f', '#2f9e44', '#0c7c86']) {
   await page.locator('#brand-hex').fill(hex);
   await page.locator('#brand-hex').blur();
   await page.waitForTimeout(150);

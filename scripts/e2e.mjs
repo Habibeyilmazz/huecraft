@@ -393,7 +393,7 @@ try {
     const shots = [
       ['palette', '?b=0c7c86&th=light', false],
       ['preview-light', '?b=0c7c86&th=light&tab=preview', true],
-      ['preview-dark', '?b=7c3aed&th=dark&tab=preview', true],
+      ['preview-dark', '?b=0c7c86&th=dark&tab=preview', true],
       ['contrast', '?b=fde047&lv=AAA&fx=0&th=light&tab=contrast', false],
       ['vision', '?b=c81e5b&th=light&cv=deuteranopia', false],
       ['phone-palette', '?b=0c7c86&th=light', false, { width: 390, height: 844 }],

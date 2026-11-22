@@ -98,7 +98,7 @@ export function parseRecipe(input: Partial<Record<keyof Recipe, string | undefin
   if (input.brand !== undefined) {
     const hex = parseColor(input.brand);
     if (hex) recipe.brand = hex;
-    else errors.push(`brand: ${quote(input.brand)} is not a color like #7c3aed, rgb(124 58 237) or oklch(0.54 0.25 293)`);
+    else errors.push(`brand: ${quote(input.brand)} is not a color like #0c7c86, rgb(12 124 134) or oklch(0.536 0.0892 204.98)`);
   }
   for (const key of ['tint', 'base', 'unit', 'radius', ...STATUSES] as const) {
     const raw = input[key];
